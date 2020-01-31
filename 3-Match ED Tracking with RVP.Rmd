@@ -3,3 +3,14 @@ title: "Match ED Tracking w/ RVP"
 output: html_notebook
 ---
 
+```{r}
+#Import & libraries
+cxr <- readRDS(file = "dfs/cxr.Rda")
+rvp <- readRDS(file = "dfs/rvp.Rda")
+track <- readRDS(file = "dfs/track.clean.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
