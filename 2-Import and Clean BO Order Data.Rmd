@@ -41,3 +41,14 @@ bo$MnemonicName <- factor(bo$MnemonicName)
 bo %>% count(MnemonicName)
 ```
 
+```{r}
+#export cleaned data
+saveRDS(bo, file = "dfs/bo.clean.Rda")
+
+#split off CXR df
+cxr <- bo %>% subset((grepl("XR",bo$MnemonicName, ignore.case=FALSE))) %>% droplevels()
+
+#split off RVP df
+rvp <- bo %>% subset((!grepl("XR",bo$MnemonicName, ignore.case=FALSE))) %>% droplevels()
+```
+
