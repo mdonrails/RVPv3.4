@@ -37,3 +37,14 @@ track$Sex <- factor(track$Sex)
 track %>% count(Sex, sort = T)
 ```
 
+#Descriptive Stats
+
+LOS by Dispo
+```{r}
+library(psych)
+do.call("rbind", describeBy(track$CheckinToCheckout.mins, track$Dispo_ED)) %>% 
+  add_rownames(var="Dispo") %>% 
+  arrange(desc(n))
+```
+
+
