@@ -3,3 +3,19 @@ title: "Import & Clean BO Order Data"
 output: html_notebook
 ---
 
+```{r include = FALSE}
+#import data
+library(readxl)
+bo <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/RawData/rvpcxr.orders.Oct17toSept19.xlsx", 
+    col_types = c("text", "date", "numeric", 
+        "date", "date", "date", "text", "text", 
+        "text", "text", "text"))
+
+track <- readRDS(file = "track.clean.Rda")
+
+#load packages
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
