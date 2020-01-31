@@ -1,10 +1,11 @@
 ---
-title: "1-ED Tracking Import and Cleaning"
+title: "ED Tracking Import and Cleaning"
 output: html_notebook
 ---
 
-Import data, save original df, load packages
-```{r}
+
+```{r include=FALSE}
+#Import data, save original df, load packages
 library(readxl)
 track <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/RawData/all.ED.visits.Oct17toSept19.xlsx", 
     col_types = c("text", "text", "date", 
@@ -22,29 +23,50 @@ library(lubridate)
 ```
 
 
-#Convert vars to factors, see counts
-
-Dispo_ED
+##Disposition Distribution
+Sorted from highest to lowest
 ```{r}
-track$Dispo_ED <- factor(track$Dispo_ED) %>% fct_explicit_na()
+track$Dispo_ED <- factor(track$Dispo_ED) %>% fct_explicit_na() #convert to factors
 
 track %>% count(Dispo_ED, sort = T)
 ```
 
-Sex
+##Sex Distribution
 ```{r}
-track$Sex <- factor(track$Sex)
+track$Sex <- factor(track$Sex) #convert to factors
 track %>% count(Sex, sort = T)
 ```
 
-#Descriptive Stats
+##Descriptive Stats
 
-LOS by Dispo
+###LOS by Dispo
 ```{r}
 library(psych)
 do.call("rbind", describeBy(track$CheckinToCheckout.mins, track$Dispo_ED)) %>% 
-  add_rownames(var="Dispo") %>% 
+  rownames_to_column(var="Dispo") %>% 
   arrange(desc(n))
 ```
 
+###Time Durations
+```{r}
+track %>% 
+  select(ends_with(".mins")) %>%
+  summarise_all(funs(
+                min = min,
+                mean = mean,
+                median = median,
+                max = max,
+                sd = sd),
+                na.rm = T) %>% #has too wide of df
+  gather(stat, val) %>% #gather all columns as "stat", values as "val"
+  separate(stat, into = c("var", "stat"), sep = "_") %>% #parse out stat as sep column, using "_" to separate
+  spread(stat, val) %>%  #convert stat into multiple columns
+  select(var, min, mean, median, max, sd) #change order
+```
+
+
+```{r include=FALSE}
+#Export Cleaned Tracking Data
+saveRDS(track, file = "track.clean.Rda")
+```
 
