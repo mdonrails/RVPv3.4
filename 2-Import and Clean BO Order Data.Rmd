@@ -47,8 +47,10 @@ saveRDS(bo, file = "dfs/bo.clean.Rda")
 
 #split off CXR df
 cxr <- bo %>% subset((grepl("XR",bo$MnemonicName, ignore.case=FALSE))) %>% droplevels()
+saveRDS(cxr, file = "dfs/cxr.Rda")
 
 #split off RVP df
 rvp <- bo %>% subset((!grepl("XR",bo$MnemonicName, ignore.case=FALSE))) %>% droplevels()
+saveRDS(rvp, file = "dfs/rvp.Rda")
 ```
 
