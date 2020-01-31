@@ -14,3 +14,14 @@ library(lubridate)
 library(psych)
 ```
 
+
+```{r}
+# create df with only encounters in which RVP ordered and tracking info, joined via FIN
+track$FIN %>% n_distinct()
+rvp.track <- merge(x = track,
+                   y = rvp,
+                   by = "FIN",
+                   all = F)
+
+```
+
