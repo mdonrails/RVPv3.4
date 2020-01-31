@@ -26,7 +26,8 @@ library(lubridate)
 
 Dispo_ED
 ```{r}
-track$Dispo_ED <- factor(track$Dispo_ED)
+track$Dispo_ED <- factor(track$Dispo_ED) %>% fct_explicit_na()
+
 track %>% count(Dispo_ED, sort = T)
 ```
 
