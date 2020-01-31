@@ -3,3 +3,36 @@ title: "1-ED Tracking Import and Cleaning"
 output: html_notebook
 ---
 
+Import data, save original df, load packages
+```{r}
+library(readxl)
+track <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/RawData/all.ED.visits.Oct17toSept19.xlsx", 
+    col_types = c("text", "text", "date", 
+        "text", "text", "date", "date", "date", 
+        "date", "date", "date", "date", "date", 
+        "date", "date", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric"))
+View(track)
+
+saveRDS(track, file = "track.raw.Rda")
+
+library(tidyverse)
+library(lubridate)
+```
+
+
+#Convert vars to factors, see counts
+
+Dispo_ED
+```{r}
+track$Dispo_ED <- factor(track$Dispo_ED)
+track %>% count(Dispo_ED, sort = T)
+```
+
+Sex
+```{r}
+track$Sex <- factor(track$Sex)
+track %>% count(Sex, sort = T)
+```
+
