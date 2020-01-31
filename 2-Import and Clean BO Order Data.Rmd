@@ -17,5 +17,27 @@ track <- readRDS(file = "track.clean.Rda")
 library(tidyverse)
 library(lubridate)
 library(psych)
+
+#export raw data
+saveRDS(bo, file = "bo.raw.Rda")
+```
+
+##Distributions
+###Dispo
+```{r}
+bo$Dispo_BO <- factor(bo$Dispo_BO) #convert to factors
+bo %>% count(Dispo_BO)
+```
+
+###Order Status
+```{r}
+bo$OrderStatus <- factor(bo$OrderStatus)
+bo %>% count(OrderStatus)
+```
+
+##Mnemonic Name
+```{r}
+bo$MnemonicName <- factor(bo$MnemonicName)
+bo %>% count(MnemonicName)
 ```
 
