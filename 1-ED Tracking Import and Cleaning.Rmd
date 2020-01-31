@@ -70,3 +70,17 @@ track %>%
 saveRDS(track, file = "track.clean.Rda")
 ```
 
+
+```{r}
+# Analyse duplicates
+track.dup <- track[duplicated(track$FIN)|duplicated(track$FIN, fromLast = TRUE),] %>% arrange(FIN) #show encounters with duplicate FIN
+
+track.dup$NaCount <- track.dup %>% is.na() %>% rowSums() #create NA count to choose b/w duplicates
+
+track.dup$lowLOS <- ifelse(track.dup$CheckinToCheckout.mins < 20, 1, 0) # create low LOS binary (of <20 mins) to choose b/w duplicates
+
+track.dup$highLOS <- ifelse(track.dup$CheckinToCheckout.mins > (24*60), 1, 0) # create high LOS binary (of >1 day) to choose b/w duplicates
+
+track.dup <- track.dup %>% arrange(FIN, lowLOS, highLOS, NaCount)
+```
+
