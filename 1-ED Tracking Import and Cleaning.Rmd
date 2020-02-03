@@ -84,3 +84,19 @@ track.dup$highLOS <- ifelse(track.dup$CheckinToCheckout.mins > (24*60), 1, 0) # 
 track.dup <- track.dup %>% arrange(FIN, lowLOS, highLOS, NaCount)
 ```
 
+```{r}
+#remove duplicates
+track$NaCount <- track %>% is.na() %>% rowSums() #create NA count to choose b/w duplicates
+
+track$lowLOS <- ifelse(track$CheckinToCheckout.mins < 20, 1, 0) # create low LOS binary (of <20 mins) to choose b/w duplicates
+
+track$highLOS <- ifelse(track$CheckinToCheckout.mins > (24*60), 1, 0) # create high LOS binary (of >1 day) to choose b/w duplicates
+
+track <- track %>% arrange(FIN, lowLOS, highLOS, NaCount) #sort 
+
+track.dedup <- track %>% distinct(FIN, .keep_all = TRUE) #remove duplicates (removes 2nd row)
+
+#Export Cleaned Tracking Data
+saveRDS(track.dedup, file = "dfs/track.dedup.Rda")
+```
+
