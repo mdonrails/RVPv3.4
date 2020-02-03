@@ -3,3 +3,14 @@ title: "Match CXR Data w/ Tracking and RVP"
 output: html_notebook
 ---
 
+
+```{r}
+#Import & libraries
+cxr <- readRDS(file = "dfs/cxr.Rda")
+rvp.track <- readRDS(file = "dfs/rvp.track.clean.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
