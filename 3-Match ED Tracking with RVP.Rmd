@@ -7,7 +7,7 @@ output: html_notebook
 #Import & libraries
 cxr <- readRDS(file = "dfs/cxr.Rda")
 rvp <- readRDS(file = "dfs/rvp.Rda")
-track <- readRDS(file = "dfs/track.clean.Rda")
+track <- readRDS(file = "dfs/track.dedup.Rda")
 
 library(tidyverse)
 library(lubridate)
@@ -17,11 +17,22 @@ library(psych)
 
 ```{r}
 # create df with only encounters in which RVP ordered and tracking info, joined via FIN
-track$FIN %>% n_distinct()
+track$FIN %>% n_distinct() #checks if any duplicates
+
 rvp.track <- merge(x = track,
                    y = rvp,
                    by = "FIN",
                    all = F)
+
+```
+
+
+```{r}
+#list column names
+names(rvp.track)
+```
+
+```{r}
 
 ```
 
