@@ -33,6 +33,25 @@ names(rvp.track)
 ```
 
 ```{r}
+#rearrange, drop, and rename columns
 
+#col_order <- c("FIN", "Sex", "DOB", "Age", "RFV", "RFV_ED", "Admit_DateTime", "Arrival_DT", "Reg_DT", "Checkin_DT", "TriageStart_DT", "MDAssigned_DT", "PinOrder_DT", "TransferOrder_DT", "BedAssign_DT", "DischargeDecision_DT", "Checkout_DT", "Discharge_DateTime", )
+
+rvp.track.clean <- rvp.track %>% select(FIN, Sex, DOB, Age,
+                     RFV, RFV_ED,
+                     Admit_DateTime, Arrival_DT, Reg_DT, Checkin_DT, TriageStart_DT, MDAssigned_DT, 
+                     PinOrder_DT, TransferOrder_DT, BedAssign_DT, DischargeDecision_DT, Checkout_DT, Discharge_DateTime,
+                     OrderID, MnemonicName, OrderStatus, Order_DateTime, OrderComplete_DateTime, 
+                     Dispo_ED, Dispo_BO,
+                     DoorToTriage.mins, DoorToBed.mins, DoorToMDAssigned.mins, BedToMDAssigned.mins, DoorToDispo.mins, MDAssignedToDischargeDecision.mins, 
+                     CheckinToCheckout.mins)
+
+rvp.track.clean <-  rvp.track.clean %>% rename(RVP_OrderID = OrderID, 
+                                               RVP_OrderStatus = OrderStatus, 
+                                               RVP_OrderDT = Order_DateTime, 
+                                               RVP_OrderCompleteDT = OrderComplete_DateTime)
+                     
+
+saveRDS(rvp.track.clean, file = "dfs/rvp.track.clean.Rda") #export
 ```
 
