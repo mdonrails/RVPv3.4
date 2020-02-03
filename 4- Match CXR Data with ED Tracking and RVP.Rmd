@@ -14,3 +14,22 @@ library(lubridate)
 library(psych)
 ```
 
+
+```{r}
+names(cxr)
+```
+
+
+```{r}
+# keep only necessary CXR columns and rename
+cxr.clean <- cxr %>% select(FIN, 
+               XR_OrderID = OrderID, 
+               XR_Type = MnemonicName, 
+               XR_OrderStatus = OrderStatus, 
+               XR_OrderDT = Order_DateTime, 
+               XR_OrderCompleteDT = OrderComplete_DateTime)
+
+saveRDS(cxr.clean, file = "dfs/cxr.clean.Rda") #export
+```
+
+
