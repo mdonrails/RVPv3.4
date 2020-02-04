@@ -45,6 +45,12 @@ rsv$AdmitToDischarge.mins<- interval(ymd_hms(rsv$Admit_DateTime), ymd_hms(rsv$Di
 is.na(rsv$AdmitToDischarge.mins) %>% table(rsv$MnemonicName)
 ```
 
+```{r}
+#export rsv with durs
+saveRDS(rsv, file = "dfs/df.rsv.durs.Rda")
+```
+
+
 ##Compare populations for homogeneity
 
 Sex Comparison - No significant difference
