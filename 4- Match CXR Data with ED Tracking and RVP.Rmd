@@ -84,3 +84,26 @@ rvp.track.cxr <- merge(x = rvp.track,
 ```{r}
 rvp.track.cxr %>% count(MnemonicName)
 ```
+
+
+```{r}
+#create binary if CXR was completed, regardless of type
+rvp.track.cxr$XR_Completed <- ifelse(rvp.track.cxr$XR_OrderStatus == "Completed", 1, 0) %>% factor()
+rvp.track.cxr$XR_Completed <- fct_explicit_na(rvp.track.cxr$XR_Completed, na_level = "0")
+rvp.track.cxr$XR_Completed <- rvp.track.cxr$XR_Completed %>% factor(levels = c(1,0),
+                                                                    labels = c("XR Completed", "No XR Completed"))
+
+rvp.track.cxr %>% count(XR_Completed)
+```
+
+
+```{r}
+table(rvp.track.cxr$MnemonicName, rvp.track.cxr$XR_Completed)
+```
+
+
+```{r}
+#export
+saveRDS(rvp.track.cxr, file = "dfs/rvp.track.cxr.Rda")
+```
+
