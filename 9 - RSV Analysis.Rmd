@@ -45,3 +45,49 @@ rsv$AdmitToDischarge.mins<- interval(ymd_hms(rsv$Admit_DateTime), ymd_hms(rsv$Di
 is.na(rsv$AdmitToDischarge.mins) %>% table(rsv$MnemonicName)
 ```
 
+##Compare populations for homogeneity
+
+Sex Comparison - No significant difference
+```{r}
+table(rsv$Sex, rsv$MnemonicName)
+chisq.test(rsv$Sex, rsv$MnemonicName, correct=FALSE)
+```
+
+Age Comparison - No significant difference
+```{r}
+#Table
+do.call("rbind", describeBy(rsv$Age, rsv$MnemonicName))
+
+#Shapiro
+with(rsv, shapiro.test(Age[MnemonicName == "RSV (POCT)"]))
+with(rsv, shapiro.test(Age[MnemonicName == "Respiratory PCR Panel"]))
+
+#Wilcox
+wilcox.test(Age ~ MnemonicName, data = rsv, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+##Compare Durations
+
+Admit To Discharge - RSV POCT is signficantly shorter
+```{r}
+do.call("rbind", describeBy(rsv$AdmitToDischarge.mins, rsv$MnemonicName))
+
+#Shapiro
+with(rsv, shapiro.test(AdmitToDischarge.mins[MnemonicName == "RSV (POCT)"]))
+with(rsv, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Respiratory PCR Panel"]))
+
+#Wilcox
+wilcox.test(AdmitToDischarge.mins ~ MnemonicName, data = rsv, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bed to Dispo - rsv POCT is signficantly shorter
+```{r}
+do.call("rbind", describeBy(rsv$BedToDispo.mins, rsv$MnemonicName))
+
+#Shapiro
+with(rsv, shapiro.test(BedToDispo.mins[MnemonicName == "RSV (POCT)"]))
+with(rsv, shapiro.test(BedToDispo.mins[MnemonicName == "Respiratory PCR Panel"]))
+
+#Wilcox
+wilcox.test(BedToDispo.mins ~ MnemonicName, data = rsv, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
