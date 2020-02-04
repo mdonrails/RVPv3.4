@@ -1,0 +1,15 @@
+---
+title: "Split Data Set by MnemonicName"
+output: html_notebook
+---
+
+
+```{r}
+#Import & libraries
+rvp <- readRDS(file = "dfs/rvp.track.cxr.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
