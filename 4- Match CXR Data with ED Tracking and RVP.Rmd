@@ -30,6 +30,44 @@ cxr.clean <- cxr %>% select(FIN,
                XR_OrderCompleteDT = OrderComplete_DateTime)
 
 saveRDS(cxr.clean, file = "dfs/cxr.clean.Rda") #export
+
+cxr <- cxr.clean
 ```
 
+```{r}
+levels(cxr$XR_Type)
+cxr %>% count(XR_Type)
+cxr %>% count(XR_OrderStatus)
+cxr$FIN %>% n_distinct()
+
+cxr %>% count(XR_Type)
+```
+
+
+```{r}
+#change cxr Order Status levels
+cxr$XR_OrderStatus <- cxr$XR_OrderStatus %>% factor(levels = c("Completed", "Discontinued", "Canceled", "Voided"))
+levels(cxr$XR_OrderStatus)
+
+#change cxr type levels so that 2 views is first (and in descending order of count)
+cxr$XR_Type <- cxr$XR_Type %>% factor(levels = c("XR Chest 2 Views Frontal/Lat", "XR Chest 1 View Frontal", "XR Chest 1 View PA", "XR Chest 3 Views Frontal/Lat/Apical", "XR Chest Routine"))
+levels(cxr$XR_Type)
+                                            
+```
+
+```{r}
+#Check CXR duplicates
+cxr.dup <- cxr[duplicated(cxr$FIN)|duplicated(cxr$FIN, fromLast = TRUE),] %>% #show encounters with duplicate FIN
+  arrange(FIN, XR_OrderStatus, XR_Type) #sort so Completed and 2 View shows up first (and doesn't get filtered)
+```
+
+```{r}
+#apply above duplicate sort to full set
+cxr <- cxr %>% arrange(FIN, XR_OrderStatus, XR_Type) #sort so Completed and 2 View shows up first (and doesn't get filtered)
+
+#remove duplicates
+cxr.dedup <- cxr %>% distinct(FIN, .keep_all = TRUE) #remove duplicates (removes 2nd+ row)
+
+saveRDS(cxr.dedup, file = "dfs/cxr.dedup.Rda")
+```
 
