@@ -42,6 +42,12 @@ strep$AdmitToDischarge.mins<- interval(ymd_hms(strep$Admit_DateTime), ymd_hms(st
 is.na(strep$AdmitToDischarge.mins) %>% table(strep$MnemonicName)
 ```
 
+```{r}
+#export strep with dur vars
+saveRDS(strep, file = "dfs/df.strep.dur.Rda")
+```
+
+
 ##Compare populations for homogeneity
 
 Sex Comparison - No significant difference
