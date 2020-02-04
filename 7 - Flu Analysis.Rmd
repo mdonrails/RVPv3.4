@@ -240,3 +240,21 @@ library(rcompanion)
 groupwiseMedian(data=flu.ili, AdmitToDischarge.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
 ```
 
+
+##Modified ILI BedToDispo Analysis
+
+Bed to Dispo Stats
+```{r}
+do.call("rbind", describeBy(flu.ili$BedToDispo.mins, flu.ili$MnemonicName))
+```
+
+Shapiro Test - failed
+```{r}
+with(flu.ili, shapiro.test(BedToDispo.mins[MnemonicName == "Influenza (POCT)"]))
+with(flu.ili, shapiro.test(BedToDispo.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+wilcox.test(BedToDispo.mins ~ MnemonicName, data = flu.ili, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
