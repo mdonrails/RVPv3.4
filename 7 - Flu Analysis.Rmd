@@ -13,6 +13,7 @@ library(lubridate)
 library(psych)
 ```
 
+##Determining Time and Duration Variables
 
 ```{r}
 #number of NAs in DischargeDecision
@@ -54,5 +55,63 @@ flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Admit_DateTime), ymd_hms(flu$Di
 is.na(flu$AdmitToDischarge.mins) %>% table(flu$MnemonicName)
 ```
 
+Admit To Discharge Stats
+```{r}
+do.call("rbind", describeBy(flu$AdmitToDischarge.mins, flu$MnemonicName))
+```
 
+Checkin To Checkout Stats
+```{r}
+do.call("rbind", describeBy(flu$CheckinToCheckout.mins, flu$MnemonicName))
+```
+
+Sex Comparison
+```{r}
+flu$Sex %>% table(flu$MnemonicName)
+chisq.test(flu$Sex, flu$MnemonicName, correct=FALSE)
+```
+
+##Remove Outliers
+
+Remove AdmitToDischarge Outliers, check stats
+```{r}
+#Remove extreme outliers by group (removes values >3IQR+3Q, LOS <15 min); 
+flu1 <-flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > (quantile(AdmitToDischarge.mins, .75, na.rm=T)+3*IQR(AdmitToDischarge.mins, na.rm=TRUE))))
+flu1 <- flu1 %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 15))
+
+#Remove all outliers by group (removes values >1.5IQR+3Q, LOS <15 min); 
+flu2 <-flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > (quantile(AdmitToDischarge.mins, .75, na.rm=T)+1.5*IQR(AdmitToDischarge.mins, na.rm=TRUE))))
+flu2 <- flu2 %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 15))
+
+do.call("rbind", describeBy(flu1$AdmitToDischarge.mins, flu1$MnemonicName))
+do.call("rbind", describeBy(flu2$AdmitToDischarge.mins, flu2$MnemonicName))
+
+do.call("rbind", describeBy(flu1$Age, flu1$MnemonicName))
+```
+
+Remove CheckinToCheckout Outliers, check stats
+```{r}
+#Remove extreme outliers by group (removes values >3IQR+3Q, LOS <15 min); 
+flu3 <-flu %>% group_by(MnemonicName) %>% filter(!(CheckinToCheckout.mins > (quantile(CheckinToCheckout.mins, .75, na.rm=T)+3*IQR(CheckinToCheckout.mins, na.rm=TRUE))))
+flu3 <- flu3 %>% group_by(MnemonicName) %>% filter(!(CheckinToCheckout.mins < 15))
+
+#Remove all outliers by group (removes values >1.5IQR+3Q, LOS <15 min); 
+flu4 <-flu %>% group_by(MnemonicName) %>% filter(!(CheckinToCheckout.mins > (quantile(CheckinToCheckout.mins, .75, na.rm=T)+1.5*IQR(CheckinToCheckout.mins, na.rm=TRUE))))
+flu4 <- flu4 %>% group_by(MnemonicName) %>% filter(!(CheckinToCheckout.mins < 15))
+
+do.call("rbind", describeBy(flu3$CheckinToCheckout.mins, flu3$MnemonicName))
+do.call("rbind", describeBy(flu4$CheckinToCheckout.mins, flu4$MnemonicName))
+```
+
+##Traditional Flu CXR Analysis
+
+Comparison table
+```{r}
+table(flu$MnemonicName, flu$XR_Completed)
+```
+
+Chi-square
+```{r}
+chisq.test(flu$MnemonicName, flu$XR_Completed, correct = FALSE)
+```
 
