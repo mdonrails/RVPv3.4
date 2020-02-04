@@ -52,11 +52,15 @@ saveRDS(rsv.poct.dedup, file="dfs/rsv.poct.dedup.Rda")
 only.lab.pcr %>% anti_join(rsv.intersect, by = "FIN") -> rsv.lab.dedup
 saveRDS(rsv.lab.dedup, file="dfs/rsv.lab.dedup.Rda")
 
+#load back in datsets
+rsv.lab.dedup <- readRDS(file = "dfs/rsv.lab.dedup.Rda")
+rsv.poct.dedup <- readRDS(file="dfs/rsv.poct.dedup.Rda")
+
 #merge the two dataframes
 rbind(rsv.lab.dedup, rsv.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.rsv
 
 #export df
-saveRDS(df.flu,file="dfs/df.rsv.Rda")
+saveRDS(df.rsv,file="dfs/df.rsv.Rda")
 
 df.rsv %>% count(MnemonicName)
 ```
@@ -74,11 +78,14 @@ saveRDS(strep.poct.dedup, file="dfs/strep.poct.dedup.Rda")
 only.lab.strep %>% anti_join(strep.intersect, by = "FIN") -> strep.lab.dedup
 saveRDS(strep.lab.dedup, file="dfs/strep.lab.dedup.Rda")
 
+strep.lab.dedup <- readRDS(file = "dfs/strep.lab.dedup.Rda")
+strep.poct.dedup <- readRDS(file="dfs/strep.poct.dedup.Rda")
+
 #merge the two dataframes
 rbind(strep.lab.dedup, strep.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.strep
 
 #export df
-saveRDS(df.flu,file="dfs/df.strep.Rda")
+saveRDS(df.strep,file="dfs/df.strep.Rda")
 
 df.strep %>% count(MnemonicName)
 ```
