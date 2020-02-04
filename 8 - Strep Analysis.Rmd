@@ -88,3 +88,15 @@ with(strep, shapiro.test(BedToDispo.mins[MnemonicName == "Rapid Strep A Antigen"
 #Wilcox
 wilcox.test(BedToDispo.mins ~ MnemonicName, data = strep, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
 ```
+
+Bed to Discharge - Strep POCT is signficantly shorter
+```{r}
+do.call("rbind", describeBy(strep$BedToDischarge.mins, strep$MnemonicName))
+
+#Shapiro
+with(strep, shapiro.test(BedToDischarge.mins[MnemonicName == "Strep A (POCT)"]))
+with(strep, shapiro.test(BedToDischarge.mins[MnemonicName == "Rapid Strep A Antigen"]))
+
+#Wilcox
+wilcox.test(BedToDischarge.mins ~ MnemonicName, data = strep, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
