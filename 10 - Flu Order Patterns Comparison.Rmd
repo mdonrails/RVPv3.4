@@ -1,0 +1,15 @@
+---
+title: "Flu Order Patterns Comparison"
+output: html_notebook
+---
+
+```{r}
+#Import & libraries
+flu.poct <- readRDS(file = "dfs/only.poct.flu.Rda")
+flu.lab <- readRDS(file = "dfs/only.lab.pcr.Rda")
+track <- readRDS(file = "dfs/track.dedup.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
