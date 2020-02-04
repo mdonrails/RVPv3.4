@@ -1,0 +1,20 @@
+---
+title: "RSV Analysis"
+output: html_notebook
+---
+
+
+```{r}
+#Import & libraries
+rsv <- readRDS(file = "dfs/df.rsv.Rda") 
+
+levels(rsv$MnemonicName)
+
+#reorder MnemonicName levels
+rsv$MnemonicName <- rsv$MnemonicName %>% factor(levels = c("RSV (POCT)","Respiratory PCR Panel"))
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
