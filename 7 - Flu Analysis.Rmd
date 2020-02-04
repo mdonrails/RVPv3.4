@@ -74,6 +74,12 @@ Checkin To Checkout Stats
 do.call("rbind", describeBy(flu$CheckinToCheckout.mins, flu$MnemonicName))
 ```
 
+```{r}
+#export flu with added duration vars
+saveRDS(flu, file = "dfs/df.flu.durs.Rda")
+```
+
+
 Sex Comparison
 ```{r}
 flu$Sex %>% table(flu$MnemonicName)
@@ -214,6 +220,11 @@ table(flu.ili$MnemonicName, flu.ili$XR_Completed)
 Chi-square
 ```{r}
 chisq.test(flu.ili$MnemonicName, flu.ili$XR_Completed, correct = FALSE)
+```
+
+```{r}
+#export flu.ili
+saveRDS(flu.ili, file = "dfs/df.flu.ili.Rda")
 ```
 
 ##Modified ILI LOS Analysis
