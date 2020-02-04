@@ -13,3 +13,14 @@ library(tidyverse)
 library(lubridate)
 library(psych)
 ```
+
+##Add epi week variables
+```{r}
+track$epi_week <- epiweek(track$Arrival_DT)
+track$epi_year <- epiyear(track$Arrival_DT)
+track$epi_yearweek <- if_else(track$epi_week<10, paste(track$epi_year, "-0", track$epi_week, sep = ""), paste(track$epi_year, track$epi_week, sep = "-"))
+
+track <- track %>% arrange(Arrival_DT)
+```
+
+
