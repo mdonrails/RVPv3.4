@@ -75,5 +75,23 @@ weekly.merged <- merge(x = weekly.merged,
 weekly.merged[is.na(weekly.merged)] = 0
 ```
 
+Subset track by ILI
+```{r}
+#fever, cough, sore throat, flu, cold, body*ache, chills
+track.ili <- track %>% subset(
+  grepl("fever",track$RFV_ED, ignore.case=TRUE)| 
+  grepl("cough",track$RFV_ED, ignore.case=TRUE)|
+  grepl("sore.*throat",track$RFV_ED, ignore.case=TRUE)|
+  grepl("throat.*pain",track$RFV_ED, ignore.case=TRUE)|
+  grepl("track",track$RFV_ED, ignore.case=TRUE)|
+  grepl("cold",track$RFV_ED, ignore.case=TRUE)|
+  grepl("body.*ache",track$RFV_ED, ignore.case=TRUE)|
+  grepl("chills",track$RFV_ED, ignore.case=TRUE)
+)
+
+weekly.track.ili <- track.ili %>% count(epi_yearweek)
+
+ggline(weekly.track.ili, "epi_yearweek", "n")
+```
 
 
