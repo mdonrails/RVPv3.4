@@ -1,0 +1,18 @@
+---
+title: "Merge POCT vs Lab Data Sets"
+output: html_notebook
+---
+
+```{r}
+#Import & libraries
+only.poct.flu <- readRDS(file = "dfs/only.poct.flu.Rda")
+only.poct.rsv <- readRDS(file = "dfs/only.poct.rsv.Rda")
+only.poct.strep <- readRDS(file = "dfs/only.poct.strep.Rda")
+only.lab.pcr <- readRDS(file = "dfs/only.lab.pcr.Rda")
+only.lab.strep <- readRDS(file = "dfs/only.lab.strep.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
