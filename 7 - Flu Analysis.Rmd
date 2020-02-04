@@ -1,0 +1,58 @@
+---
+title: "7 - Flu Analysis"
+output: html_notebook
+---
+
+
+```{r}
+#Import & libraries
+flu <- readRDS(file = "dfs/df.flu.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
+
+```{r}
+#number of NAs in DischargeDecision
+is.na(flu$DischargeDecision_DT) %>% table(flu$MnemonicName)
+```
+
+
+```{r}
+#number of NAs in BedAssign
+is.na(flu$BedAssign_DT) %>% table(flu$MnemonicName)
+```
+
+Most of the time (all but 85 encounters), Discharge_DateTime is earlier than Checkout_DT
+```{r}
+#compare Checkout DT vs Discharge_DateTime (greater = later)
+ifelse(flu$Checkout_DT < flu$Discharge_DateTime, 1, 0) %>% sum()
+```
+
+Most of the time (all but 659 encounters), MDAssigned_DT is after BedAssign_DT
+```{r}
+#compare BedAssign vs MDAssign (greater = later)
+ifelse(flu$BedAssign_DT > flu$MDAssigned_DT, 1, 0) %>% sum(na.rm = TRUE) 
+```
+
+
+```{r}
+#Compute Bed Assigned to Discharge Decision
+flu$BedToDispo.mins<- interval(ymd_hms(flu$BedAssign_DT), ymd_hms(flu$DischargeDecision_DT)) %>% as.duration()/dminutes(1)
+
+#number of NAs in BedToDispo
+is.na(flu$BedToDispo.mins) %>% table(flu$MnemonicName)
+```
+
+```{r}
+#Compute AdmitToDischarge
+flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Admit_DateTime), ymd_hms(flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+#number of NAs in BedToDispo
+is.na(flu$AdmitToDischarge.mins) %>% table(flu$MnemonicName)
+```
+
+
+
