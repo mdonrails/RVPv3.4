@@ -12,15 +12,50 @@ track <- readRDS(file = "dfs/track.dedup.Rda")
 library(tidyverse)
 library(lubridate)
 library(psych)
+library(ggpubr)
 ```
 
-##Add epi week variables
+
+```{r}
+#filter out encounters to match date range
+track <- track %>% subset(Arrival_DT >= as.Date("2017-10-01"))
+```
+
+Count number of encounters per epi_yearweek
 ```{r}
 track$epi_week <- epiweek(track$Arrival_DT)
 track$epi_year <- epiyear(track$Arrival_DT)
 track$epi_yearweek <- if_else(track$epi_week<10, paste(track$epi_year, "-0", track$epi_week, sep = ""), paste(track$epi_year, track$epi_week, sep = "-"))
-
 track <- track %>% arrange(Arrival_DT)
+weekly.track <- track %>% count(epi_yearweek)
+
+ggline(weekly.track, "epi_yearweek", "n")
 ```
 
+Count number of Flu POCT per epi_yearweek
+```{r}
+flu.poct$epi_week <- epiweek(flu.poct$Arrival_DT)
+flu.poct$epi_year <- epiyear(flu.poct$Arrival_DT)
+flu.poct$epi_yearweek <- if_else(flu.poct$epi_week<10, paste(flu.poct$epi_year, "-0", flu.poct$epi_week, sep = ""), paste(flu.poct$epi_year, flu.poct$epi_week, sep = "-"))
+flu.poct <- flu.poct %>% arrange(Arrival_DT)
+weekly.flu.poct <- flu.poct %>% count(epi_yearweek)
+
+ggline(weekly.flu.poct, "epi_yearweek", "n")
+```
+
+Count number of Flu lab per epi_yearweek
+```{r}
+flu.lab$epi_week <- epiweek(flu.lab$Arrival_DT)
+flu.lab$epi_year <- epiyear(flu.lab$Arrival_DT)
+flu.lab$epi_yearweek <- if_else(flu.lab$epi_week<10, paste(flu.lab$epi_year, "-0", flu.lab$epi_week, sep = ""), paste(flu.lab$epi_year, flu.lab$epi_week, sep = "-"))
+flu.lab <- flu.lab %>% arrange(Arrival_DT)
+
+weekly.flu.lab <- flu.lab %>% count(epi_yearweek)
+
+ggline(weekly.flu.lab, "epi_yearweek", "n")
+```
+
+```{r}
+
+```
 
