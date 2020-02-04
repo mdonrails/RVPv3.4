@@ -55,7 +55,25 @@ weekly.flu.lab <- flu.lab %>% count(epi_yearweek)
 ggline(weekly.flu.lab, "epi_yearweek", "n")
 ```
 
+Merge data sets by epi_yearweek
 ```{r}
+#first merge track with flu.lab
+weekly.merged<- merge(x = weekly.track,
+                      y = weekly.flu.lab,
+                      by = "epi_yearweek",
+                      all.x = TRUE) %>%
+  rename("Encounters" = n.x, "Respiratory PCR Panel Orders" = n.y)
 
+#then merge with flu.poct
+weekly.merged <- merge(x = weekly.merged,
+                      y = weekly.flu.poct,
+                      by = "epi_yearweek",
+                      all.x = TRUE) %>%
+  rename("POCT Flu Orders" = n)
+
+#force NA to 0
+weekly.merged[is.na(weekly.merged)] = 0
 ```
+
+
 
