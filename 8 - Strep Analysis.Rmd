@@ -7,6 +7,9 @@ output: html_notebook
 #Import & libraries
 strep <- readRDS(file = "dfs/df.strep.Rda") 
 
+#reorder MnemonicName levels
+strep$MnemonicName <- strep$MnemonicName %>% factor(levels = c("Strep A (POCT)","Rapid Strep A Antigen"))
+
 library(tidyverse)
 library(lubridate)
 library(psych)
