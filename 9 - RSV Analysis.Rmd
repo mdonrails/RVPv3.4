@@ -18,3 +18,30 @@ library(lubridate)
 library(psych)
 ```
 
+##Compute Time Duration Variables
+
+```{r}
+#Compute Bed Assigned to Discharge Decision
+rsv$BedToDispo.mins<- interval(ymd_hms(rsv$BedAssign_DT), ymd_hms(rsv$DischargeDecision_DT)) %>% as.duration()/dminutes(1)
+
+#number of NAs in BedToDispo
+is.na(rsv$BedToDispo.mins) %>% table(rsv$MnemonicName)
+```
+
+```{r}
+# Compute Bed Assigned to Discharge
+rsv$BedToDischarge.mins<- interval(ymd_hms(rsv$BedAssign_DT), ymd_hms(rsv$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+# number of NAs in BedToDischarge
+is.na(rsv$BedToDischarge.mins) %>% table(rsv$MnemonicName)
+```
+
+
+```{r}
+#Compute AdmitToDischarge
+rsv$AdmitToDischarge.mins<- interval(ymd_hms(rsv$Admit_DateTime), ymd_hms(rsv$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+#number of NAs in AdmitToDischarge
+is.na(rsv$AdmitToDischarge.mins) %>% table(rsv$MnemonicName)
+```
+
