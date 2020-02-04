@@ -71,3 +71,16 @@ cxr.dedup <- cxr %>% distinct(FIN, .keep_all = TRUE) #remove duplicates (removes
 saveRDS(cxr.dedup, file = "dfs/cxr.dedup.Rda")
 ```
 
+```{r}
+#match all rvp.track with corresponding CXR; do NOT include CXR with FINs not in rvp.track
+
+rvp.track.cxr <- merge(x = rvp.track,
+                       y = cxr.dedup,
+                       by = "FIN",
+                       all.x = TRUE)
+```
+
+
+```{r}
+rvp.track.cxr %>% count(MnemonicName)
+```
