@@ -13,3 +13,37 @@ library(lubridate)
 library(psych)
 ```
 
+
+```{r}
+rvp %>% count(MnemonicName)
+```
+
+```{r}
+table(rvp$MnemonicName, rvp$RVP_OrderStatus)
+```
+
+
+```{r}
+#show encounters with duplicate FIN & MnemonicName
+rvp.dup <- rvp[duplicated(rvp[c("FIN", "MnemonicName")])|
+                duplicated(rvp[c("FIN", "MnemonicName")], 
+                fromLast =TRUE), ] %>% 
+  arrange(FIN, MnemonicName, RVP_OrderStatus, RVP_OrderDT)
+
+rvp.dup %>% count(MnemonicName)
+```
+
+```{r}
+#remove encounters w/ duplicate EncounterIDs and MnemonicName (same order 2x)
+rvp <- rvp %>% arrange(FIN, MnemonicName, RVP_OrderStatus, RVP_OrderDT) %>% distinct(FIN, MnemonicName, .keep_all = TRUE)
+
+rvp %>% count(MnemonicName)
+```
+
+```{r}
+#export dedup
+saveRDS(rvp, file = "dfs/rvp.track.cxr.dedup.Rda")
+```
+
+
+
