@@ -1,0 +1,14 @@
+---
+title: "Strep Analysis"
+output: html_notebook
+---
+
+```{r}
+#Import & libraries
+strep <- readRDS(file = "dfs/df.strep.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
