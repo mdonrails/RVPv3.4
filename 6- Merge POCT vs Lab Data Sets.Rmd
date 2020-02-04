@@ -16,3 +16,71 @@ library(lubridate)
 library(psych)
 ```
 
+
+Create dataframe of POCT Flu vs. Resp PCR, removing all encounters in which both tests were ordered
+```{r}
+#create df of the intersecting encounters (semijoin returns rows of POCT flu w/ matched FIN Lab PCR)
+only.poct.flu %>% semi_join(only.lab.pcr, by = "FIN") -> flu.intersect
+
+#create df of POCT flu w/o those encounters (via antijoin)
+only.poct.flu %>% anti_join(flu.intersect, by = "FIN") -> flu.poct.dedup
+saveRDS(flu.poct.dedup, file="dfs/flu.poct.dedup.Rda")
+
+#create df of Resp PCR w/o those encounters (via antijoin)
+only.lab.pcr %>% anti_join(flu.intersect, by = "FIN") -> flu.lab.dedup
+saveRDS(flu.lab.dedup, file="dfs/flu.lab.dedup.Rda")
+
+#merge the two dataframes
+rbind(flu.lab.dedup, flu.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.flu
+
+#export df
+saveRDS(df.flu,file="dfs/df.flu.Rda")
+
+df.flu %>% count(MnemonicName)
+```
+
+Create dataframe of POCT RSV vs. Resp PCR, removing all encounters in which both tests were ordered
+```{r}
+#create df of the intersecting encounters (semijoin returns rows of POCT RSV w/ matched FIN Lab PCR)
+only.poct.rsv %>% semi_join(only.lab.pcr, by = "FIN") -> rsv.intersect
+
+#create df of POCT flu w/o those encounters (via antijoin)
+only.poct.rsv %>% anti_join(rsv.intersect, by = "FIN") -> rsv.poct.dedup
+saveRDS(rsv.poct.dedup, file="dfs/rsv.poct.dedup.Rda")
+
+#create df of Resp PCR w/o those encounters (via antijoin)
+only.lab.pcr %>% anti_join(rsv.intersect, by = "FIN") -> rsv.lab.dedup
+saveRDS(rsv.lab.dedup, file="dfs/rsv.lab.dedup.Rda")
+
+#merge the two dataframes
+rbind(rsv.lab.dedup, rsv.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.rsv
+
+#export df
+saveRDS(df.flu,file="dfs/df.rsv.Rda")
+
+df.rsv %>% count(MnemonicName)
+```
+
+Create dataframe of POCT Strep vs. Rapid Strep A Antigen, removing all encounters in which both tests were ordered
+```{r}
+#create df of the intersecting encounters (semijoin returns rows of POCT Strep w/ matched FIN Lab Strep)
+only.poct.strep %>% semi_join(only.lab.strep, by = "FIN") -> strep.intersect
+
+#create df of POCT flu w/o those encounters (via antijoin)
+only.poct.strep %>% anti_join(strep.intersect, by = "FIN") -> strep.poct.dedup
+saveRDS(strep.poct.dedup, file="dfs/strep.poct.dedup.Rda")
+
+#create df of Resp PCR w/o those encounters (via antijoin)
+only.lab.strep %>% anti_join(strep.intersect, by = "FIN") -> strep.lab.dedup
+saveRDS(strep.lab.dedup, file="dfs/strep.lab.dedup.Rda")
+
+#merge the two dataframes
+rbind(strep.lab.dedup, strep.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.strep
+
+#export df
+saveRDS(df.flu,file="dfs/df.strep.Rda")
+
+df.strep %>% count(MnemonicName)
+```
+
+
