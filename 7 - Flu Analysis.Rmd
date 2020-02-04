@@ -48,6 +48,15 @@ is.na(flu$BedToDispo.mins) %>% table(flu$MnemonicName)
 ```
 
 ```{r}
+# Compute Bed Assigned to Discharge
+flu$BedToDischarge.mins<- interval(ymd_hms(flu$BedAssign_DT), ymd_hms(flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+# number of NAs in BedToDischarge
+is.na(flu$BedToDischarge.mins) %>% table(flu$MnemonicName)
+```
+
+
+```{r}
 #Compute AdmitToDischarge
 flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Admit_DateTime), ymd_hms(flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
 
