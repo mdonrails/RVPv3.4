@@ -45,5 +45,32 @@ rvp %>% count(MnemonicName)
 saveRDS(rvp, file = "dfs/rvp.track.cxr.dedup.Rda")
 ```
 
+Extract datasets of each test only (in case of duplicates), export as Rda
+```{r}
+#Flu POCT
+only.poct.flu <- rvp %>% subset(
+  (grepl("Influenza",rvp$MnemonicName, ignore.case=FALSE)))
+saveRDS(only.poct.flu, file="dfs/only.poct.flu.Rda")
+
+#RSV POCT
+only.poct.rsv <- rvp %>% subset(
+  (grepl("RSV",rvp$MnemonicName, ignore.case=FALSE)))
+saveRDS(only.poct.rsv, file="dfs/only.poct.rsv.Rda")
+
+#Strep A POCT
+only.poct.strep <- rvp %>% subset(
+  (grepl("Strep A \\(POCT\\)",rvp$MnemonicName, ignore.case=FALSE)))
+saveRDS(only.poct.strep, file="dfs/only.poct.strep.Rda")
+
+#RespPCR
+only.lab.pcr <- rvp %>% subset(
+  (grepl("Respiratory",rvp$MnemonicName, ignore.case=FALSE)))
+saveRDS(only.lab.pcr, file="dfs/only.lab.pcr.Rda")
+
+#Rapid Strep
+only.lab.strep <- rvp %>% subset(
+  (grepl("Rapid Strep A",rvp$MnemonicName, ignore.case=FALSE)))
+saveRDS(only.lab.strep, file="dfs/only.lab.strep.Rda")
+```
 
 
