@@ -3,3 +3,15 @@ title: "Alere Data Import"
 output: html_notebook
 ---
 
+```{r}
+#Import & libraries
+alere <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/RawData/Alere_RALS_2019-02-11.xls", 
+                    col_types = c("date", "text", "text", 
+                                  "text", "text", "text", "text", "text", 
+                                  "text", "text", "text", "text", "text", 
+                                  "text", "text", "text", "text", "text"))
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
