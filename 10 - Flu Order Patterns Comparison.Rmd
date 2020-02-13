@@ -13,6 +13,7 @@ library(tidyverse)
 library(lubridate)
 library(psych)
 library(ggpubr)
+library(reshape)
 ```
 
 
@@ -83,7 +84,7 @@ track.ili <- track %>% subset(
   grepl("cough",track$RFV_ED, ignore.case=TRUE)|
   grepl("sore.*throat",track$RFV_ED, ignore.case=TRUE)|
   grepl("throat.*pain",track$RFV_ED, ignore.case=TRUE)|
-  grepl("track",track$RFV_ED, ignore.case=TRUE)|
+  grepl("flu",track$RFV_ED, ignore.case=TRUE)|
   grepl("cold",track$RFV_ED, ignore.case=TRUE)|
   grepl("body.*ache",track$RFV_ED, ignore.case=TRUE)|
   grepl("chills",track$RFV_ED, ignore.case=TRUE)
@@ -94,4 +95,75 @@ weekly.track.ili <- track.ili %>% count(epi_yearweek)
 ggline(weekly.track.ili, "epi_yearweek", "n")
 ```
 
+
+Create data set with all encounters of track (leftjoin) and added poct and lab flu
+```{r}
+trackprop <- merge(x = track[,c("FIN", "epi_yearweek", "Arrival_DT", "DOB", "Sex", "RFV_ED")],
+                   y = flu.lab[,c("FIN", "MnemonicName")],
+                   by = "FIN",
+                   all.x = TRUE)
+                   
+trackprop %>% count(Resp_PCR_Ordered)
+
+trackprop <- merge(x = trackprop,
+                   y = flu.poct[,c("FIN", "MnemonicName")],
+                   by = "FIN",
+                   all.x = TRUE)
+
+trackprop <- trackprop %>% rename("Resp_PCR_Ordered" = MnemonicName.x,
+                    "Flu_POCT_Ordereed" = MnemonicName.y)
+
+trackprop <- trackprop %>% rename("Flu_POCT_Ordered" = Flu_POCT_Ordereed)
+
+trackprop$Resp_PCR_Ordered <- ifelse(is.na(trackprop$Resp_PCR_Ordered), 0, 1) %>% #convert Resp PCR to factors
+  factor(levels = c(0,1),
+         labels = c("Not Ordered", "Ordered"))
+
+trackprop$Flu_POCT_Ordered <- ifelse(is.na(trackprop$Flu_POCT_Ordered), 0, 1) %>% #convert Flu to factors
+  factor(levels = c(0,1),
+         labels = c("Not Ordered", "Ordered"))
+```
+
+Subset that data for ILI only
+```{r}
+#fever, cough, sore throat, flu, cold, body*ache, chills
+trackprop.ili <- trackprop %>% subset(
+  grepl("fever",trackprop$RFV_ED, ignore.case=TRUE)| 
+  grepl("cough",trackprop$RFV_ED, ignore.case=TRUE)|
+  grepl("sore.*throat",trackprop$RFV_ED, ignore.case=TRUE)|
+  grepl("throat.*pain",trackprop$RFV_ED, ignore.case=TRUE)|
+  grepl("flu",trackprop$RFV_ED, ignore.case=TRUE)|
+  grepl("cold",trackprop$RFV_ED, ignore.case=TRUE)|
+  grepl("body.*ache",trackprop$RFV_ED, ignore.case=TRUE)|
+  grepl("chills",trackprop$RFV_ED, ignore.case=TRUE)
+)
+```
+
+##For all encounters
+
+Resp PCR before 10/1/18, POCT after 10/1/18
+```{r}
+trackpropA <- trackprop %>% subset(Arrival_DT <= as.Date("2018-10-01"))
+trackpropB <- trackprop %>% subset(Arrival_DT >= as.Date("2018-10-01"))
+
+trackprop %>% 
+  subset(Arrival_DT <= as.Date("2018-10-01")) %>% 
+  count(Resp_PCR_Ordered)
+
+trackprop %>% subset(Arrival_DT >= as.Date("2018-10-01")) %>%
+  count(Flu_POCT_Ordered)
+
+RespPCRfreq <- table(trackpropA$Resp_PCR_Ordered) %>% as.data.frame() 
+names(RespPCRfreq)[1] = "Status"
+names(RespPCRfreq)[2] = "Resp_PCR"
+
+FluPOCTfreq <- table(trackpropB$Flu_POCT_Ordered) %>% as.data.frame() 
+names(FluPOCTfreq)[1] = "Status"
+names(FluPOCTfreq)[2] = "Flu_POCT"
+
+freq.all.table <- merge(x = FluPOCTfreq, 
+                        y = RespPCRfreq,
+                        by = "Status") %>% t()
+
+```
 
