@@ -1,0 +1,15 @@
+---
+title: "Alere & Flue Merge & Analysis"
+output: html_notebook
+---
+
+
+```{r}
+flu <- readRDS(file = "dfs/df.flu.Rda")
+alere <- readRDS(file = "dfs/alere.all.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
