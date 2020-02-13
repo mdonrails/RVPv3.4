@@ -15,3 +15,13 @@ library(tidyverse)
 library(lubridate)
 library(psych)
 ```
+
+```{r}
+#subset, removing QCs
+alere<- alere %>% subset(SampleType == "Patient")
+
+#Remove vars that don't matter
+alere <- alere %>% select(Alere_DateTime, PatientID, TestType, StrepA, FluA, FluB, RSV, Flags)
+))
+```
+
