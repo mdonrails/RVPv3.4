@@ -22,6 +22,32 @@ alere<- alere %>% subset(SampleType == "Patient")
 
 #Remove vars that don't matter
 alere <- alere %>% select(Alere_DateTime, PatientID, TestType, StrepA, FluA, FluB, RSV, Flags)
-))
+
+
+#remove unusable encounters
+alere <- alere %>% filter(!grepl("test",PatientID))
+alere <- alere %>% filter(!grepl("^0*$",PatientID))
+alere <- alere %>% filter(!grepl("^1*$",PatientID))
+alere <- alere %>% filter(!grepl("^2*$",PatientID))
+alere <- alere %>% filter(!grepl("^3*$",PatientID))
+alere <- alere %>% filter(!grepl("^4*$",PatientID))
+alere <- alere %>% filter(!grepl("^5*$",PatientID))
+alere <- alere %>% filter(!grepl("^6*$",PatientID))
+alere <- alere %>% filter(!grepl("^7*$",PatientID))
+
+alere %>% filter(grepl("\\d",PatientID))
+
+#Patient ID Character Distributions - Most have 12
+nchar(alere$PatientID) %>% factor() %>% summary()
+
+#Create Possible FIN row, keeping those w/ only 12 digits
+alere$FIN <- 
+  ifelse(nchar(alere$PatientID) == 12 & grepl("\\d",alere$PatientID),
+         alere$PatientID,
+         NA)
+
+#export
+saveRDS(alere, file = "dfs/alere.all.Rda")
 ```
+
 
