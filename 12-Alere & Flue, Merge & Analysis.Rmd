@@ -13,3 +13,73 @@ library(lubridate)
 library(psych)
 ```
 
+Filter out to include just flu-relevant for alere
+```{r}
+alere <-
+  alere %>% subset(TestType == "Flu A/B")
+
+#Create overall column to combine FluA/B
+alere$FluOverall <-
+  case_when(alere$FluA == "positive" | alere$FluB == "positive" ~ "positive",
+           alere$FluA == "negative" | alere$FluB == "negative" ~ "negative",
+           alere$FluA == "invalid" | alere$FluB == "invalid" ~ "invalid"
+           ) %>% 
+  factor(levels = c("positive", "negative", "invalid"))
+
+
+
+#remove now unnecessary columns, change order
+alere <- 
+  alere %>% select(Alere_DateTime, FIN, FluA, FluB, FluOverall, Flags)
+
+alere %>% count(FluOverall)
+
+#export
+saveRDS(alere, file = "dfs/alere.clean.Rda")
+```
+
+```{r}
+# create column for inconclusive test
+alere$Inconclusive <- case_when(grepl(".*Inconclusive.*",alere$Flags, ignore.case=TRUE) ~ 1,
+                                TRUE ~ 0) %>%
+  factor(levels = c(0,1),
+         labels = c("Not Inconclusive", "Inconclusive"))
+
+alere %>% count(Inconclusive)
+```
+
+
+Show Duplicates
+```{r}
+alere.dup <- alere[duplicated(alere$FIN)|duplicated(alere$FIN, fromLast = TRUE),] %>% #show encounters with duplicate FIN
+  arrange(FIN, Inconclusive, FluOverall, Alere_DateTime) #sort so inconclusive before postive before negative before invalid
+
+alere.dup %>% count(FluOverall)
+alere.dup %>% count(Inconclusive)
+```
+
+Remove duplicates
+```{r}
+#apply above duplicate sort to full set
+alere.dedup <- alere %>% arrange(FIN, Inconclusive, FluOverall, Alere_DateTime)
+
+#remove duplicates
+alere.dedup <- alere.dedup %>% distinct(FIN, .keep_all = TRUE) #remove duplicates (removes 2nd+ row)
+
+#re sort
+alere.dedup <- alere.dedup %>% arrange(Alere_DateTime)
+  
+alere.dedup %>% count(FluOverall)
+alere.dedup %>% count(Inconclusive)
+
+table(alere.dedup$FluOverall, alere.dedup$Inconclusive)
+
+#export
+saveRDS(alere.dedup, file = "dfs/alere.dedup.Rda")
+```
+
+
+```{r}
+
+```
+
