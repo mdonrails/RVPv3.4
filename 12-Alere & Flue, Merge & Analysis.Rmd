@@ -78,8 +78,65 @@ table(alere.dedup$FluOverall, alere.dedup$Inconclusive)
 saveRDS(alere.dedup, file = "dfs/alere.dedup.Rda")
 ```
 
-
+Merge Flu+Tracking with Alere
 ```{r}
+alere.flu <- merge(x = flu,
+                   y = alere.dedup,
+                   by = "FIN",
+                   all.x = TRUE)
+
+alere.flu %>% filter(MnemonicName == "Influenza (POCT)") %>% count(FluOverall)
+
+table(alere.flu$MnemonicName, alere.flu$FluOverall)
+alere.flu %>% count(MnemonicName)
+```
+
+Merge track with alere
+```{r}
+track <- readRDS(file = "dfs/track.dedup.Rda")
+alere.track <- merge(x = track,
+                   y = alere.dedup,
+                   by = "FIN",
+                   all = FALSE) 
+
+alere.dedup %>% count(FluOverall)
+alere.track %>% count(FluOverall)
+              
+```
+
+Add Duration Vars
+```{r}
+#Compute AdmitToDischarge
+alere.flu$AdmitToDischarge.mins<- interval(ymd_hms(alere.flu$Admit_DateTime), ymd_hms(alere.flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+#Compute Bed Assigned to Discharge Decision
+alere.flu$BedToDispo.mins<- interval(ymd_hms(alere.flu$BedAssign_DT), ymd_hms(alere.flu$DischargeDecision_DT)) %>% as.duration()/dminutes(1)
+```
+
+Compare pos vs neg - LOS
+```{r}
+#remove invalid from group
+alere.flu.noinvalid <- alere.flu %>% filter(FluOverall != "invalid")
+
+#stats
+do.call("rbind", describeBy(alere.flu.noinvalid$AdmitToDischarge.mins, alere.flu.noinvalid$FluOverall))
+
+#comparison
+wilcox.test(AdmitToDischarge.mins ~ FluOverall, data = alere.flu.noinvalid, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+
+
+#Export
+saveRDS(alere.flu, file = "dfs/alere.flu.Rda")
+saveRDS(alere.flu.noinvalid, file = "dfs/alere.flu.noinvalid.Rda")
 
 ```
 
+Compare pos vs neg - BedToDispo
+```{r}
+#stats
+do.call("rbind", describeBy(alere.flu.noinvalid$BedToDispo.mins, alere.flu.noinvalid$FluOverall))
+
+#comparison
+wilcox.test(BedToDispo.mins ~ FluOverall, data = alere.flu.noinvalid, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+
+```
