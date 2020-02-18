@@ -39,30 +39,23 @@ saveRDS(df.flu,file="dfs/df.flu.Rda")
 df.flu %>% count(MnemonicName)
 ```
 
-Create dataframe of POCT RSV vs. Resp PCR, removing all encounters in which both tests were ordered
+Create dataframe of POCT Flu vs. Resp PCR, before and after
 ```{r}
-#create df of the intersecting encounters (semijoin returns rows of POCT RSV w/ matched FIN Lab PCR)
-only.poct.rsv %>% semi_join(only.lab.pcr, by = "FIN") -> rsv.intersect
+#subset lab pcr
+lab.pcr.before <- only.lab.pcr %>% filter(Admit_DateTime < as.Date("2018-10-01"))
 
-#create df of POCT flu w/o those encounters (via antijoin)
-only.poct.rsv %>% anti_join(rsv.intersect, by = "FIN") -> rsv.poct.dedup
-saveRDS(rsv.poct.dedup, file="dfs/rsv.poct.dedup.Rda")
+#export
+saveRDS(lab.pcr.before, file = "dfs/lab.pcr.before.Rda")
 
-#create df of Resp PCR w/o those encounters (via antijoin)
-only.lab.pcr %>% anti_join(rsv.intersect, by = "FIN") -> rsv.lab.dedup
-saveRDS(rsv.lab.dedup, file="dfs/rsv.lab.dedup.Rda")
-
-#load back in datsets
-rsv.lab.dedup <- readRDS(file = "dfs/rsv.lab.dedup.Rda")
-rsv.poct.dedup <- readRDS(file="dfs/rsv.poct.dedup.Rda")
+#import POCT flu orders without concurrent Resp PCR orders
+flu.poct.dedup <- readRDS(file="dfs/flu.poct.dedup.Rda")
 
 #merge the two dataframes
-rbind(rsv.lab.dedup, rsv.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.rsv
+rbind(lab.pcr.before, flu.poct.dedup) %>% arrange(Arrival_DT) %>% droplevels() -> df.flu.ba
 
 #export df
-saveRDS(df.rsv,file="dfs/df.rsv.Rda")
+saveRDS(df.flu.ba,file="dfs/df.flu.beforeafter.Rda")
 
-df.rsv %>% count(MnemonicName)
 ```
 
 Create dataframe of POCT Strep vs. Rapid Strep A Antigen, removing all encounters in which both tests were ordered
