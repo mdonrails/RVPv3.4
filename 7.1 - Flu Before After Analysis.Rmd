@@ -1,0 +1,189 @@
+---
+title: "Flu Before After Analysis "
+output: html_notebook
+---
+##Setup
+```{r}
+#Import & libraries
+flu <- readRDS(file = "dfs/df.flu.beforeafter.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+library(stargazer)
+library(xtable)
+
+```
+
+##Compute Durations
+
+```{r}
+#Compute Bed Assigned to Discharge Decision
+flu$BedToDispo.mins<- interval(ymd_hms(flu$BedAssign_DT), ymd_hms(flu$DischargeDecision_DT)) %>% as.duration()/dminutes(1)
+
+#number of NAs in BedToDispo
+is.na(flu$BedToDispo.mins) %>% table(flu$MnemonicName)
+```
+
+```{r}
+#Compute AdmitToDischarge
+flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Admit_DateTime), ymd_hms(flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+#number of NAs in AdmitToDischarge
+is.na(flu$AdmitToDischarge.mins) %>% table(flu$MnemonicName)
+```
+
+
+##Traditonal Flu Outlier Removal
+```{r}
+#Remove extreme outliers by group (removes values >3IQR+3Q, LOS <15 min); 
+flu1 <-flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > (quantile(AdmitToDischarge.mins, .75, na.rm=T)+3*IQR(AdmitToDischarge.mins, na.rm=TRUE))))
+flu1 <- flu1 %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 15))
+
+#Remove predefined outliers (removes values LOS > 1 day, LOS <15 min); 
+#flu2 <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > 1440)) %>% filter(!(AdmitToDischarge.mins < 15))
+
+#Remove predefined outliers (removes values LOS <15 min); 
+flu2 <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 25))
+```
+
+##Traditional Flu Homegeneity of Groups
+###Sex Comparison
+```{r}
+flu2$Sex %>% ftable(flu2$MnemonicName)
+chisq.test(flu2$MnemonicName, flu2$Sex, correct=FALSE)
+```
+
+###Age Comparison
+```{r}
+do.call("rbind", describeBy(flu2$Age, flu2$MnemonicName))
+wilcox.test(Age ~ MnemonicName, data = flu2, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+##Traditional Flu LOS Analysis
+Shapiro Test - failed
+```{r}
+with(flu2, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Influenza (POCT)"]))
+with(flu2, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(flu2$AdmitToDischarge.mins, flu2$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(AdmitToDischarge.mins ~ MnemonicName, data = flu2, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+groupwiseMedian(data=flu2, AdmitToDischarge.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##Traditional Flu Bed to Dispo Analysis
+
+Shapiro Test - failed
+```{r}
+with(flu2, shapiro.test(BedToDispo.mins[MnemonicName == "Influenza (POCT)"]))
+with(flu2, shapiro.test(BedToDispo.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(flu2$BedToDispo.mins, flu2$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(BedToDispo.mins ~ MnemonicName, data = flu2, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+flu2.btd <- flu2 %>% filter(!is.na(BedToDispo.mins))
+groupwiseMedian(data=flu2.btd, BedToDispo.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##Traditional Flu CXR Analysis
+Chi-square
+```{r}
+table(flu2$MnemonicName, flu2$XR_Completed)
+chisq.test(flu2$MnemonicName, flu2$XR_Completed, correct = FALSE)
+```
+
+##Modified ILI Flu Setup
+Subset by modified ILI
+```{r}
+#fever, cough, sore throat, flu, cold, body*ache, chills
+flu.ili <- flu %>% subset(
+  grepl("fever",flu$RFV, ignore.case=TRUE)| 
+  grepl("cough",flu$RFV, ignore.case=TRUE)|
+  grepl("sore.*throat",flu$RFV, ignore.case=TRUE)|
+  grepl("throat.*pain",flu$RFV, ignore.case=TRUE)|
+  grepl("flu",flu$RFV, ignore.case=TRUE)|
+  grepl("cold",flu$RFV, ignore.case=TRUE)|
+  grepl("body.*ache",flu$RFV, ignore.case=TRUE)|
+  grepl("chills",flu$RFV, ignore.case=TRUE)
+)
+
+do.call("rbind", describeBy(flu.ili$AdmitToDischarge.mins, flu.ili$MnemonicName))
+```
+
+##Modified ILI Flu Homegeneity of Groups
+###Sex Comparison
+```{r}
+flu.ili$MnemonicName %>% ftable(flu.ili$Sex)
+chisq.test(flu.ili$MnemonicName, flu.ili$Sex, correct=FALSE)
+```
+
+###Age Comparison
+
+```{r}
+do.call("rbind", describeBy(flu.ili$Age, flu.ili$MnemonicName))
+wilcox.test(Age ~ MnemonicName, data = flu.ili, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+
+##Modified ILI Flu LOS Analysis
+Shapiro Test - failed
+```{r}
+with(flu.ili, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Influenza (POCT)"]))
+with(flu.ili, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(flu.ili$AdmitToDischarge.mins, flu.ili$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(AdmitToDischarge.mins ~ MnemonicName, data = flu.ili, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+groupwiseMedian(data=flu.ili, AdmitToDischarge.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##Modified ILI Flu Bed to Dispo Analysis
+
+Shapiro Test - failed
+```{r}
+with(flu.ili, shapiro.test(BedToDispo.mins[MnemonicName == "Influenza (POCT)"]))
+with(flu.ili, shapiro.test(BedToDispo.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(flu.ili$BedToDispo.mins, flu.ili$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(BedToDispo.mins ~ MnemonicName, data = flu.ili, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+flu.ili.btd <- flu.ili %>% filter(!is.na(BedToDispo.mins))
+groupwiseMedian(data=flu.ili.btd, BedToDispo.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##Modified ILI Flu CXR Analysis
+
+Chi-square
+```{r}
+table(flu.ili$MnemonicName, flu.ili$XR_Completed)
+chisq.test(flu.ili$MnemonicName, flu.ili$XR_Completed, correct = FALSE)
+```
