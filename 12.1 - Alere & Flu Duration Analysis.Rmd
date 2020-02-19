@@ -1,0 +1,15 @@
+---
+title: "Alere & Flu Duration Analysis"
+output: html_notebook
+---
+
+
+```{r}
+
+alere.flu <- readRDS(file = "dfs/alere.flu.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
