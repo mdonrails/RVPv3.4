@@ -1,0 +1,138 @@
+---
+title: "Alere & Flu Duration Analysis"
+output: html_notebook
+---
+
+##Setup
+```{r}
+
+flu <- readRDS(file = "dfs/df.flu.beforeafter.Rda")
+alere <- readRDS(file = "dfs/alere.dedup.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
+##Compute Durations
+
+```{r}
+#Compute Bed Assigned to Discharge Decision
+flu$BedToDispo.mins<- interval(ymd_hms(flu$BedAssign_DT), ymd_hms(flu$DischargeDecision_DT)) %>% as.duration()/dminutes(1)
+
+#number of NAs in BedToDispo
+is.na(flu$BedToDispo.mins) %>% table(flu$MnemonicName)
+```
+
+```{r}
+#Compute AdmitToDischarge
+flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Admit_DateTime), ymd_hms(flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+
+#number of NAs in AdmitToDischarge
+is.na(flu$AdmitToDischarge.mins) %>% table(flu$MnemonicName)
+```
+
+##Traditonal Flu Outlier Removal
+```{r}
+#Remove predefined outliers (removes values LOS <25 min); 
+flu <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 15))
+```
+
+##Merge Flu & Tracking with Alere
+```{r}
+alere.flu <- merge(x = flu,
+                   y = alere,
+                   by = "FIN",
+                   all.x = TRUE)
+
+alere.flu.pos <- merge(x = flu,
+                   y = filter(alere, FluOverall == "positive"),
+                   by = "FIN",
+                   all.x = TRUE) %>% 
+  filter(!(MnemonicName == "Influenza (POCT)" & is.na(FluOverall)))
+
+
+alere.flu.neg <- merge(x = flu,
+                   y = filter(alere, FluOverall == "negative"),
+                   by = "FIN",
+                   all.x = TRUE) %>% 
+  filter(!(MnemonicName == "Influenza (POCT)" & is.na(FluOverall)))
+```
+
+##All Encounter (Positive) LOS
+Shapiro Test - failed
+```{r}
+with(alere.flu.pos, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Influenza (POCT)"]))
+with(alere.flu.pos, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(alere.flu.pos$AdmitToDischarge.mins, alere.flu.pos$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(AdmitToDischarge.mins ~ MnemonicName, data = alere.flu.pos, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+groupwiseMedian(data=alere.flu.pos, AdmitToDischarge.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##All Encounter (Negative) LOS
+Shapiro Test - failed
+```{r}
+with(alere.flu.neg, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Influenza (POCT)"]))
+with(alere.flu.neg, shapiro.test(AdmitToDischarge.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(alere.flu.neg$AdmitToDischarge.mins, alere.flu.neg$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(AdmitToDischarge.mins ~ MnemonicName, data = alere.flu.neg, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+groupwiseMedian(data=alere.flu.neg, AdmitToDischarge.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##All Encounter (Positive) BedToDispo
+Shapiro Test - failed
+```{r}
+with(alere.flu.pos, shapiro.test(BedToDispo.mins[MnemonicName == "Influenza (POCT)"]))
+with(alere.flu.pos, shapiro.test(BedToDispo.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(alere.flu.pos$BedToDispo.mins, alere.flu.pos$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(BedToDispo.mins ~ MnemonicName, data = alere.flu.pos, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+groupwiseMedian(data=filter(alere.flu.pos, !is.na(BedToDispo.mins)), BedToDispo.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
+##All Encounter (Negative) BedToDispo
+
+Shapiro Test - failed
+```{r}
+with(alere.flu.neg, shapiro.test(BedToDispo.mins[MnemonicName == "Influenza (POCT)"]))
+with(alere.flu.neg, shapiro.test(BedToDispo.mins[MnemonicName == "Respiratory PCR Panel"]))
+```
+
+Wilcoxon test - significant
+```{r}
+do.call("rbind", describeBy(alere.flu.neg$BedToDispo.mins, alere.flu.neg$MnemonicName)) %>% select(n, mean, median, min, max)
+wilcox.test(BedToDispo.mins ~ MnemonicName, data = alere.flu.neg, alternative = "two.sided", var.equal = FALSE, conf.int = TRUE, conf.level = 0.95)
+```
+
+Bootstrapped Median CI
+```{r}
+library(rcompanion)
+groupwiseMedian(data=filter(alere.flu.neg, !is.na(BedToDispo.mins)), BedToDispo.mins ~ MnemonicName, bca = FALSE, percentile = TRUE, R = 1000)
+```
+
