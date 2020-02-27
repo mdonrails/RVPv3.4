@@ -1,0 +1,82 @@
+---
+title: "Alere & Tracking Merge"
+output: html_notebook
+---
+
+Need: 
+
+
+Do:
+track (track.dedup) -> left merge w alere flu (alere.dedup) = have all tracked encounters in which there was alere done
+left join with BO orders 
+
+##Setup
+```{r}
+alere <- readRDS(file = "dfs/alere.dedup.Rda")
+track <- readRDS(file = "dfs/track.dedup.Rda")
+rvp <- readRDS(file = "dfs/rvp.Rda")
+cxr <- readRDS(file = "dfs/cxr.dedup.Rda")
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
+##Merge Tracking with Alere
+```{r}
+track.alere <- merge(x = track,
+                   y = alere,
+                   by = "FIN",
+                   all.x = TRUE)
+
+track.alere %>% count(FluOverall)
+```
+
+##Merge Tracking+Alere with BO RVP Orders
+```{r}
+track.alere.bo <- merge(x = track.alere,
+                   y = rvp,
+                   by = "FIN",
+                   all.x = T)
+```
+
+##Merge Tracking+Alere+BO with CXR
+```{r}
+track.alere.bo.cxr <- merge(x = track.alere.bo,
+                       y = cxr,
+                       by = "FIN",
+                       all.x = TRUE)
+```
+
+##Cleanup Names
+```{r}
+#list column names
+names(track.alere.bo.cxr)
+track.alere.bo.cxr %>% count(MnemonicName)
+
+```
+
+```{r}
+names(alere.flu.ili.neg)
+```
+
+
+```{r}
+track.alere.bo.cxr.org <- track.alere.bo.cxr %>% select(FIN, Sex, DOB, Age,
+                     RFV, RFV_ED, Dispo_ED,
+                     Admit_DateTime, Arrival_DT, Reg_DT, Checkin_DT, TriageStart_DT, MDAssigned_DT, 
+                     PinOrder_DT, TransferOrder_DT, BedAssign_DT, DischargeDecision_DT, Checkout_DT, Discharge_DateTime,
+                     XR_OrderID, XR_Type, XR_OrderStatus, XR_OrderDT, XR_OrderCompleteDT,
+                     OrderID, MnemonicName, OrderStatus, Order_DateTime, OrderComplete_DateTime, 
+                     Alere_DateTime, FluA, FluB, FluOverall, Flags, Inconclusive)
+
+saveRDS(track.alere.bo.cxr.org, file = "dfs/2ndx/track.alere.bo.cxr.org.Rda")
+```
+
+
+##Add Mnemonic Name to Alere Exclusive POCT Orders
+
+```{r}
+
+```
+
