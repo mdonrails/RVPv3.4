@@ -383,3 +383,4 @@ chisq.test(alere.flu.ili.neg$MnemonicName, alere.flu.ili.neg$XR_Completed, corre
 ```
 
 
+
