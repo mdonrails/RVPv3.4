@@ -26,7 +26,7 @@ is.na(flu$BedToDispo.mins) %>% table(flu$MnemonicName)
 
 ```{r}
 #Compute AdmitToDischarge
-flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Admit_DateTime), ymd_hms(flu$Discharge_DateTime)) %>% as.duration()/dminutes(1)
+flu$AdmitToDischarge.mins<- interval(ymd_hms(flu$Checkin_DT), ymd_hms(flu$Checkout_DT)) %>% as.duration()/dminutes(1)
 
 #number of NAs in AdmitToDischarge
 is.na(flu$AdmitToDischarge.mins) %>% table(flu$MnemonicName)
@@ -35,7 +35,7 @@ is.na(flu$AdmitToDischarge.mins) %>% table(flu$MnemonicName)
 ##Traditonal Flu Outlier Removal
 ```{r}
 #Remove predefined outliers (removes values LOS <25 min); 
-flu <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 15))
+flu <- flu %>% filter(!(AdmitToDischarge.mins < 15))
 ```
 
 ##Merge Flu & Tracking with Alere
@@ -45,18 +45,14 @@ alere.flu <- merge(x = flu,
                    by = "FIN",
                    all.x = TRUE)
 
-alere.flu.pos <- merge(x = flu,
-                   y = filter(alere, FluOverall == "positive"),
-                   by = "FIN",
-                   all.x = TRUE) %>% 
-  filter(!(MnemonicName == "Influenza (POCT)" & is.na(FluOverall)))
+alere.flu.pos <- alere.flu %>% filter(
+  MnemonicName == "Respiratory PCR Panel"|
+  FluOverall == "positive")
 
 
-alere.flu.neg <- merge(x = flu,
-                   y = filter(alere, FluOverall == "negative"),
-                   by = "FIN",
-                   all.x = TRUE) %>% 
-  filter(!(MnemonicName == "Influenza (POCT)" & is.na(FluOverall)))
+alere.flu.neg <- alere.flu %>% filter(
+  MnemonicName == "Respiratory PCR Panel"|
+  FluOverall == "negative")
 ```
 
 ##All Encounter (Positive) LOS
@@ -381,6 +377,5 @@ Negative
 table(alere.flu.ili.neg$MnemonicName, alere.flu.ili.neg$XR_Completed)
 chisq.test(alere.flu.ili.neg$MnemonicName, alere.flu.ili.neg$XR_Completed, correct = FALSE)
 ```
-
 
 
