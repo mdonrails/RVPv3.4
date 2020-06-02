@@ -87,6 +87,15 @@ alere.flu.pcr$AdmitToDischarge.mins<- interval(ymd_hms(alere.flu.pcr$Checkin_DT)
 is.na(alere.flu.pcr$AdmitToDischarge.mins) %>% table(alere.flu.pcr$MnemonicName)
 ```
 
+Add epiweek
+```{r}
+alere.flu.pcr$epi_week <- epiweek(alere.flu.pcr$Admit_DateTime)
+alere.flu.pcr$epi_year <- epiyear(alere.flu.pcr$Admit_DateTime)
+alere.flu.pcr$epi_yearweek <- if_else(alere.flu.pcr$epi_week<10, paste(alere.flu.pcr$epi_year, "-0", alere.flu.pcr$epi_week, sep = ""), paste(alere.flu.pcr$epi_year, alere.flu.pcr$epi_week, sep = "-"))
+```
+
+
+
 ##export
 ```{r}
 saveRDS(alere.flu.pcr, file = "dfs/alere.flu.pcr.Rda")
