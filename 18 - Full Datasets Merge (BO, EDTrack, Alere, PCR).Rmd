@@ -4,3 +4,91 @@ output: html_notebook
 ---
 
 
+##Setup
+```{r}
+
+flu <- readRDS(file = "dfs/df.flu.beforeafter.Rda")
+  #includes tracking shell data and cxr data for each encounter
+  #filtered so only Resp PCR ordered before 10/1/2018
+  #filtered so only Flu POCT orders w/o concurrent Resp PCR orders placed
+
+alere <- readRDS(file = "dfs/alere.dedup.Rda")
+  #includes Flu POCT test results for each encounter from Alere machine
+
+pcr2 <- readRDS(file = "dfs/pcr.flu.clean.Rda")
+  #includes Resp PCR test restults for each encounter from BO
+
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
+##Clean-Up & Merge
+Remove all except Flu Overall and FIN from pcr
+```{r}
+pcr <- pcr %>% select(FIN, FluOverall)
+```
+
+Remove Flu A/Flu B from alere
+```{r}
+alere <- alere %>% select(Alere_DateTime, FIN, FluOverall, Flags, Inconclusive)
+```
+
+Merge alere & flu
+```{r}
+alere.flu <- merge(x = flu,
+                   y = alere,
+                   by = "FIN",
+                   all.x = TRUE)
+
+alere.flu %>% filter(MnemonicName == "Influenza (POCT)") %>% count(FluOverall)
+alere.flu %>% count(FluOverall)
+```
+
+Merge alere+flu & PCR
+```{r}
+alere.flu.pcr <- merge(x = alere.flu,
+                   y = pcr,
+                   by = "FIN",
+                   all.x = TRUE)
+
+alere.flu.pcr %>% filter(MnemonicName == "Respiratory PCR Panel") %>% count(FluOverall)
+alere.flu.pcr %>% filter(MnemonicName == "Respiratory PCR Panel") %>% count(FluOverall.y)
+
+table(alere.flu.pcr$MnemonicName, alere.flu.pcr$FluOverall.y)
+```
+
+Create unified FluOverall column
+```{r}
+alere.flu.pcr$FluOverall <- case_when(
+  alere.flu.pcr$FluOverall.y == "negative"| alere.flu.pcr$FluOverall.x == "negative" ~ "negative",
+  alere.flu.pcr$FluOverall.y == "positive"| alere.flu.pcr$FluOverall.x == "positive" ~ "positive",
+  TRUE ~ "no result") %>%
+  factor(levels= c("positive", "negative", "no result"))
+
+table(alere.flu.pcr$MnemonicName, alere.flu.pcr$FluOverall)
+```
+
+##Compute Durations
+
+```{r}
+#Compute Bed Assigned to Discharge Decision
+alere.flu.pcr$BedToDispo.mins<- interval(ymd_hms(alere.flu.pcr$BedAssign_DT), ymd_hms(alere.flu.pcr$DischargeDecision_DT)) %>% as.duration()/dminutes(1)
+
+#number of NAs in BedToDispo
+is.na(alere.flu.pcr$BedToDispo.mins) %>% table(alere.flu.pcr$MnemonicName)
+```
+
+```{r}
+#Compute AdmitToDischarge
+alere.flu.pcr$AdmitToDischarge.mins<- interval(ymd_hms(alere.flu.pcr$Checkin_DT), ymd_hms(alere.flu.pcr$Checkout_DT)) %>% as.duration()/dminutes(1)
+
+#number of NAs in AdmitToDischarge
+is.na(alere.flu.pcr$AdmitToDischarge.mins) %>% table(alere.flu.pcr$MnemonicName)
+```
+
+##export
+```{r}
+saveRDS(alere.flu.pcr, file = "dfs/alere.flu.pcr.Rda")
+```
+
