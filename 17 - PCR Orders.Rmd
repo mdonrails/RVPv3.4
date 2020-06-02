@@ -6,9 +6,8 @@ output: html_notebook
 Import & Libraries
 ```{r}
 library(readxl)
-pcr.r <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/Excel/RVP_PCR_All.xlsx", 
+pcr <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/Excel/RVP_PCR_All.xlsx", 
                     col_types = c("text", "text", "date", "numeric", "date", "date", "date", "numeric", "text", "text", "text", "text"))
-pcr <- pcr.r
 library(tidyverse)
 library(lubridate)
 library(psych)
@@ -81,7 +80,7 @@ summary(pcr.flu.tidy$FluOverall)
 
 remove duplicates
 ```{r}
-pcr.flu.clean <- pcr.flu.tidy %>% arrange(FIN, OrderComplete_DateTime, FluOverall) #sort 
+pcr.flu.clean <- pcr.flu.tidy %>% arrange(FIN, OrderComplete_DateTime, FluOverall) #sort by FIN, then by when it was ordered, then by 
 pcr.flu.clean <- pcr.flu.clean %>% distinct(FIN, .keep_all = TRUE)
 ```
 
@@ -89,6 +88,6 @@ pcr.flu.clean <- pcr.flu.clean %>% distinct(FIN, .keep_all = TRUE)
 
 export
 ```{r}
-saveRDS(pcr.flu.spread, file = "dfs/pcr.flu.overall.Rda")
+saveRDS(pcr.flu.clean, file = "dfs/pcr.flu.clean.Rda")
 ```
 
