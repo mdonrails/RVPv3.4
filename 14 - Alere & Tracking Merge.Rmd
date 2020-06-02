@@ -74,9 +74,155 @@ saveRDS(track.alere.bo.cxr.org, file = "dfs/2ndx/track.alere.bo.cxr.org.Rda")
 ```
 
 
-##Add Mnemonic Name to Alere Exclusive POCT Orders
+##Isolate Relevant Encounters
 
+Load back in only needed df
 ```{r}
+alltrack <- readRDS( file = "dfs/2ndx/track.alere.bo.cxr.org.Rda")
+```
+
+Columns
+```{r}
+names(alltrack)
+```
+
+
+Find orders which have no BO record but are in Alere (517 total)
+```{r}
+alltrack.i <- alltrack %>% filter(is.na(alltrack$MnemonicName) == TRUE & is.na(alltrack$FluOverall) == FALSE)
+alltrack.i %>% count(FluOverall)
+```
+
+Find flu orders which have no Alere Record but are in BO (135 total)
+```{r}
+alltrack.i2 <- alltrack %>% filter(alltrack$MnemonicName == "Influenza (POCT)" & is.na(alltrack$FluOverall) == TRUE)
+alltrack.i2 %>% count(MnemonicName)
+```
+
+Coerce "Influenza (POCT)" MnemonicName onto all Alere Exclusive Orders as MnemonicName2
+```{r}
+alltrack <- 
+  alltrack %>% mutate(MnemonicName2 = case_when(
+  (is.na(alltrack$MnemonicName) == TRUE & is.na(alltrack$FluOverall) == FALSE) ~ "Influenza (POCT)",
+  TRUE ~ as.character(MnemonicName)
+  ))
+
+alltrack$MnemonicName2 <- factor(alltrack$MnemonicName2)
+
+alltrack %>% count(MnemonicName2)
+alltrack %>% count(MnemonicName)
 
 ```
+
+Drop all orders without MnemonicName2
+```{r}
+only.rvp.selectvars <- alltrack %>% filter(is.na(MnemonicName2)==F)
+only.rvp.selectvars %>% count(MnemonicName2)
+
+saveRDS(only.rvp.selectvars, file="dfs/2ndx/only.rvp.selectvars.Rda")
+
+only.rvp.selectvars %>% distinct(FIN)
+```
+
+
+
+Filter So Flu before and After
+```{r}
+df.flu.beforeafter2 <- 
+  only.rvp.selectvars %>% filter(
+  MnemonicName2 == "Respiratory PCR Panel" & Arrival_DT < as.Date("2018-10-01")|
+  MnemonicName2 == "Influenza (POCT)" & Arrival_DT > as.Date("2018-10-01")
+)
+
+df.flu.beforeafter2 %>% count(MnemonicName2)
+
+is.na(df.flu.beforeafter2$FluOverall) %>% summary()
+
+n_distinct(df.flu.beforeafter2$FIN)
+
+df.flu.beforeafter2 %>% count(OrderStatus)
+```
+
+Change Order Status to Complete for those with Alere match
+```{r}
+df.flu.beforeafter2 <- 
+  df.flu.beforeafter2 %>% mutate(OrderStatus2 = case_when(
+    is.na(FluOverall) == F ~ "Completed",
+    TRUE ~ as.character(OrderStatus)
+  ))
+df.flu.beforeafter2$OrderStatus <- df.flu.beforeafter2$OrderStatus %>% 
+  factor(levels = c("Completed", "Discontinued", "Canceled", "Voided", "Voided With Results"))
+
+df.flu.beforeafter2$OrderStatus2 <- df.flu.beforeafter2$OrderStatus2 %>% 
+  factor(levels = c("Completed", "Discontinued", "Canceled", "Voided", "Voided With Results"))
+
+df.flu.beforeafter2 %>% count(OrderStatus2)
+levels(df.flu.beforeafter2$OrderStatus2)
+alltrack %>% count(MnemonicName)
+```
+
+Create NA Count
+```{r}
+df.flu.beforeafter2$NaCount <- df.flu.beforeafter2 %>% is.na() %>% rowSums()
+```
+
+
+Show Duplicates
+```{r}
+#create NA count
+df.flu.beforeafter2.dup <- df.flu.beforeafter2[duplicated(df.flu.beforeafter2$FIN)|duplicated(df.flu.beforeafter2$FIN, fromLast = TRUE),] %>% #show encounters with duplicate FIN
+ arrange(FIN, OrderStatus2, Inconclusive, Arrival_DT, Alere_DateTime, NaCount) #sort so inconclusive before postive before negative before invalid
+```
+
+
+Remove Duplicates
+```{r}
+#arrange
+df.flu.beforeafter2 <- df.flu.beforeafter2 %>%
+  arrange(FIN, OrderStatus2, Inconclusive, Arrival_DT, Alere_DateTime, NaCount)
+
+#remove, resort, droplevels
+df.flu.beforeafter2.dedup <- df.flu.beforeafter2 %>% distinct(FIN, .keep_all = TRUE) %>% arrange(Arrival_DT) %>% droplevels()
+
+df.flu.beforeafter2 %>% count(MnemonicName2)
+n_distinct(df.flu.beforeafter2.dedup$FIN)
+```
+
+Get Column Names
+```{r}
+names(df.flu.beforeafter2.dedup)
+```
+
+Rearrange Column Names
+```{r}
+df.flu.beforeafter2.dedup <- df.flu.beforeafter2.dedup %>% select(FIN, Sex, DOB, Age,
+                     RFV, RFV_ED, Dispo_ED,
+                     Admit_DateTime, Arrival_DT, Reg_DT, Checkin_DT, TriageStart_DT, MDAssigned_DT, 
+                     PinOrder_DT, TransferOrder_DT, BedAssign_DT, DischargeDecision_DT, Checkout_DT, Discharge_DateTime,
+                     XR_OrderID, XR_Type, XR_OrderStatus, XR_OrderDT, XR_OrderCompleteDT,
+                     OrderID, MnemonicName, MnemonicName2, OrderStatus, OrderStatus2, Order_DateTime, OrderComplete_DateTime, 
+                     Alere_DateTime, FluA, FluB, FluOverall, Flags, Inconclusive)
+```
+
+
+Export
+```{r}
+saveRDS(df.flu.beforeafter2.dedup, file = "dfs/2ndx/df.flu.beforeafter2.dedup.Rda")
+```
+
+
+```{r}
+df.flu.beforeafter2$epi_week <- epiweek(df.flu.beforeafter2$Arrival_DT)
+df.flu.beforeafter2$epi_year <- epiyear(df.flu.beforeafter2$Arrival_DT)
+df.flu.beforeafter2$epi_yearweek <- if_else(df.flu.beforeafter2$epi_week<10, paste(df.flu.beforeafter2$epi_year, "-0", df.flu.beforeafter2$epi_week, sep = ""), paste(df.flu.beforeafter2$epi_year, df.flu.beforeafter2$epi_week, sep = "-"))
+df.flu.beforeafter2 <- df.flu.beforeafter2 %>% arrange(Arrival_DT)
+
+weekly.flu.lab <- df.flu.beforeafter2 %>% count(epi_yearweek)
+
+library(ggpubr)
+ggline(weekly.flu.lab, "epi_yearweek", "n")
+```
+
+
+
 

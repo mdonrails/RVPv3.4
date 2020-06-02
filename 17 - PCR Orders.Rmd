@@ -1,0 +1,94 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Import & Libraries
+```{r}
+library(readxl)
+pcr.r <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Documents/EM Research/Data Analysis/RVPv3.4/Excel/RVP_PCR_All.xlsx", 
+                    col_types = c("text", "text", "date", "numeric", "date", "date", "date", "numeric", "text", "text", "text", "text"))
+pcr <- pcr.r
+library(tidyverse)
+library(lubridate)
+library(psych)
+library(ggpubr)
+```
+Create time variables
+```{r}
+pcr$epi_week <- epiweek(pcr$Admit_DateTime)
+pcr$epi_year <- epiyear(pcr$Admit_DateTime)
+pcr$epi_yearweek <- if_else(pcr$epi_week<10, paste(pcr$epi_year, "-0", pcr$epi_week, sep = ""), paste(pcr$epi_year, pcr$epi_week, sep = "-"))
+pcr <- pcr %>% arrange(Admit_DateTime)
+weekly.track <- pcr %>% count(epi_yearweek)
+
+ggline(weekly.track, "epi_yearweek", "n")
+```
+
+Factor "clinical events"" = test subgroup
+```{r}
+pcr$ClinicalEvent <- factor(pcr$ClinicalEvent)
+pcr %>% count(ClinicalEvent)
+```
+
+select flu rows only
+```{r}
+pcr.flu <- pcr %>% filter(ClinicalEvent == "AH1N1" | 
+                          ClinicalEvent == "Influenza A Equivocal (Inconclusive)"|
+                          ClinicalEvent == "Influenza A, No Subtype Detected"|
+                          ClinicalEvent == "H3FLU"|
+                          ClinicalEvent ==  "H1SEA"|
+                          ClinicalEvent ==  "INFB") %>% droplevels()
+```
+                            
+Create factors & deduplicate
+```{r}
+pcr.flu$ClinicalEvent_Result <- pcr.flu$ClinicalEvent_Result %>% factor(levels = c("DETECTED", "NOT DETECTED"))
+
+pcr.flu <- pcr.flu %>% arrange(FIN, Order_ID, ClinicalEvent, ClinicalEvent_Result)
+
+#only keep rows with distinct Order_ID & test subtype
+pcr.flu.dedup <- pcr.flu %>% distinct(Order_ID, ClinicalEvent,.keep_all = TRUE)
+```
+
+
+tidy data
+```{r}
+pcr.flu.tidy <- pcr.flu.dedup %>% pivot_wider(
+  names_from = ClinicalEvent,
+  values_from = ClinicalEvent_Result
+)
+
+#old method
+#pcr.flu.spread <- pcr.flu.dedup %>% 
+  #spread(ClinicalEvent, ClinicalEvent_Result)
+```
+
+create flu overall column
+```{r}
+pcr.flu.tidy$FluOverall <- case_when(
+  pcr.flu.tidy$AH1N1 == "DETECTED"|
+  pcr.flu.tidy$H1SEA == "DETECTED"|
+  pcr.flu.tidy$H3FLU == "DETECTED"|
+  pcr.flu.tidy$INFB == "DETECTED"|
+  pcr.flu.tidy$`Influenza A, No Subtype Detected` == "DETECTED" ~ "positive",
+  pcr.flu.tidy$`Influenza A Equivocal (Inconclusive)` == "DETECTED" ~ "inconclusive",
+  TRUE ~ "negative") %>%
+  factor(levels= c("positive", "negative", "inconclusive"))
+
+summary(pcr.flu.tidy$FluOverall)
+```
+
+remove duplicates
+```{r}
+pcr.flu.clean <- pcr.flu.tidy %>% arrange(FIN, OrderComplete_DateTime, FluOverall) #sort 
+pcr.flu.clean <- pcr.flu.clean %>% distinct(FIN, .keep_all = TRUE)
+```
+
+
+
+export
+```{r}
+saveRDS(pcr.flu.spread, file = "dfs/pcr.flu.overall.Rda")
+```
+

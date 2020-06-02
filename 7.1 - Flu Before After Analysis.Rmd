@@ -41,10 +41,10 @@ flu1 <-flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > (quan
 flu1 <- flu1 %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 15))
 
 #Remove predefined outliers (removes values LOS > 1 day, LOS <15 min); 
-#flu2 <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > 1440)) %>% filter(!(AdmitToDischarge.mins < 15))
+flu2 <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins > 1440)) %>% filter(!(AdmitToDischarge.mins < 15))
 
 #Remove predefined outliers (removes values LOS <15 min); 
-flu2 <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 25))
+flu2 <- flu %>% group_by(MnemonicName) %>% filter(!(AdmitToDischarge.mins < 20))
 ```
 
 ##Traditional Flu Homegeneity of Groups
