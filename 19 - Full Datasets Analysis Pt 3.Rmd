@@ -1,0 +1,72 @@
+---
+title: "19 - Full Datasets Analysis Pt 3 - Ordering Patterns"
+output: html_notebook
+---
+
+#Setup
+```{r}
+flu <- readRDS(file = "dfs/alere.flu.pcr.Rda")
+flu <- flu %>% filter(!(AdmitToDischarge.mins < 20))
+library(tidyverse)
+library(lubridate)
+library(psych)
+```
+
+Binary Column for modified ILI
+```{r}
+#fever, cough, sore throat, flu, cold, body*ache, chills
+flu <- flu %>% mutate(ILI = case_when(
+  grepl("fever",flu$RFV, ignore.case=TRUE)|
+  grepl("cough",flu$RFV, ignore.case=TRUE)|
+  grepl("sore.*throat",flu$RFV, ignore.case=TRUE)|
+  grepl("throat.*pain",flu$RFV, ignore.case=TRUE)|
+  grepl("flu",flu$RFV, ignore.case=TRUE)| 
+  grepl("cold",flu$RFV, ignore.case=TRUE)|
+  grepl("body.*ache",flu$RFV, ignore.case=TRUE)|
+  grepl("chills",flu$RFV, ignore.case=TRUE) ~ "positive",
+  TRUE ~ "negative")) 
+
+flu$ILI <- flu$ILI %>% factor(levels = c("positive", "negative"))
+
+summary(flu$ILI)
+```
+
+#Analysis
+
+Positivity Rate
+```{r}
+flu.rate <- flu %>% filter(FluOverall != "no result") %>% droplevels()
+
+table(flu.rate$MnemonicName, flu.rate$FluOverall)
+table(flu.rate$MnemonicName, flu.rate$FluOverall) %>% prop.table(1)
+chisq.test(flu.rate$MnemonicName, flu.rate$FluOverall, correct = FALSE)
+```
+
+Positivity Rate - ILI specific
+```{r}
+flu.rate2 <- flu %>% filter(FluOverall != "no result") %>% filter(ILI == "positive") %>% droplevels()
+
+table(flu.rate2$MnemonicName, flu.rate2$FluOverall)
+table(flu.rate2$MnemonicName, flu.rate2$FluOverall) %>% prop.table(1)
+chisq.test(flu.rate2$MnemonicName, flu.rate2$FluOverall, correct = FALSE)
+```
+
+ILI Ordering Rate
+```{r}
+table(flu$MnemonicName, flu$ILI)
+table(flu$MnemonicName, flu$ILI) %>% prop.table(1)
+chisq.test(flu$MnemonicName, flu$ILI, correct = FALSE)
+```
+
+Time from Order Placed to Alere Entry
+```{r}
+flu$OrderedToTested.mins<- interval(ymd_hms(flu$RVP_OrderDT), ymd_hms(flu$Alere_DateTime)) %>% as.duration()/dminutes(1)
+flu.poct <- flu %>% filter(MnemonicName == "Influenza (POCT)") %>% select(FIN, Arrival_DT, AdmitToDischarge.mins, BedToDispo.mins, OrderedToTested.mins,epi_yearweek, ILI, XR_Completed)
+```
+
+
+```{r}
+library(ggpubr)
+ggline(flu.poct, "OrderedToTested.mins", "AdmitToDischarge.mins")
+```
+

@@ -1,0 +1,116 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(psych)
+
+track <-  readRDS(file = "dfs/track.dedup.Rda")
+flu <- readRDS(file = "dfs/df.flu.beforeafter.Rda")
+```
+
+```{r}
+#subset flu to only req vars
+flu <- flu %>% select(FIN, MnemonicName)
+
+#left join, keeping all of tracking
+alltrack.flu <- merge(track, flu, all.x = TRUE, by = "FIN")
+
+#add "Not Ordered" mnemonic name for comparison
+alltrack.flu$MnemonicName <- case_when(
+  is.na(alltrack.flu$MnemonicName) == TRUE ~ "Not Ordered",
+  TRUE ~ as.character(alltrack.flu$MnemonicName)) %>%
+  factor(levels = c("Influenza (POCT)","Respiratory PCR Panel", "Not Ordered"))
+summary(alltrack.flu$MnemonicName)
+
+#denote when ILI sx present
+alltrack.flu <- alltrack.flu %>% mutate(ILI = case_when(
+  grepl("fever",alltrack.flu$RFV_ED, ignore.case=TRUE)|
+  grepl("cough",alltrack.flu$RFV_ED, ignore.case=TRUE)|
+  grepl("sore.*throat",alltrack.flu$RFV_ED, ignore.case=TRUE)|
+  grepl("throat.*pain",alltrack.flu$RFV_ED, ignore.case=TRUE)|
+  grepl("flu",alltrack.flu$RFV_ED, ignore.case=TRUE)| 
+  grepl("cold",alltrack.flu$RFV_ED, ignore.case=TRUE)|
+  grepl("body.*ache",alltrack.flu$RFV_ED, ignore.case=TRUE)|
+  grepl("chills",alltrack.flu$RFV_ED, ignore.case=TRUE) ~ "positive",
+  TRUE ~ "negative")) 
+alltrack.flu$ILI <- alltrack.flu$ILI %>% factor(levels = c("positive", "negative"))
+
+summary(alltrack.flu$ILI)
+table(alltrack.flu$MnemonicName, alltrack.flu$ILI)
+
+#split into before & after by date
+tf1 <- alltrack.flu %>% subset(Arrival_DT <= as.Date("2018-10-01")) %>% droplevels()
+tf2 <- alltrack.flu %>% subset(Arrival_DT >= as.Date("2018-10-01")) %>% droplevels()
+
+```
+
+
+```{r}
+#Resp PCR - Before
+summary(tf1$ILI)
+table(tf1$MnemonicName, tf1$ILI)
+table(tf1$ILI, tf1$MnemonicName) %>% prop.table(1)
+```
+
+
+```{r}
+#Flu POCT - After
+summary(tf2$ILI)
+table(tf2$MnemonicName, tf2$ILI)
+table(tf2$ILI, tf2$MnemonicName) %>% prop.table(1)
+```
+
+
+```{r}
+#proportions?
+#order.comp <- matrix(c(.046279196, 0.003550769, 0.071616007,0.006429469), ncol=2, byrow=T)
+#colnames(order.comp) <- c("% of ILI Positive Ordered", "% of ILI Negative Ordered")
+#rownames(order.comp) <- c("Respiratory PCR Panel", "Influenza (POCT)")
+#order.comp <- as.table(order.comp)
+#order.comp
+```
+
+```{r}
+#For ILI sx positive
+order.p <- matrix(c(654, 8491, 425, 8779), ncol=2, byrow=T)
+colnames(order.p) <- c("Test Ordered", "Test Not Ordered")
+rownames(order.p) <- c("Influenza (POCT)", "Respiratory PCR Panel")
+order.p <- as.table(order.p)
+order.p
+order.p %>% prop.table(1)
+chisq.test(order.p)
+```
+
+```{r}
+#For ILI sx negative
+order.n <- matrix(c(399, 61659, 206, 59774), ncol=2, byrow=T)
+colnames(order.n) <- c("Test Ordered", "Test Not Ordered")
+rownames(order.n) <- c("Influenza (POCT)", "Respiratory PCR Panel")
+order.n <- as.table(order.n)
+order.n
+order.n %>% prop.table(1)
+chisq.test(order.n)
+```
+
+
+ILI Ordering Rate
+```{r}
+#alltrack.flu2 <- alltrack.flu %>% filter(MnemonicName != "Not Ordered") %>% droplevels()
+#table(alltrack.flu2$MnemonicName, alltrack.flu2$ILI)
+#table(alltrack.flu2$MnemonicName, alltrack.flu2$ILI) %>% prop.table(1)
+#chisq.test(alltrack.flu2$MnemonicName, alltrack.flu2$ILI, correct = FALSE)
+
+
+order.r <- matrix(c(654, 398, 425, 206), ncol=2, byrow=T)
+colnames(order.r) <- c("ILI sx pos", "ILI sx neg")
+rownames(order.r) <- c("Influenza (POCT)", "Respiratory PCR Panel")
+order.r <- as.table(order.r)
+order.r
+order.r %>% prop.table(1)
+chisq.test(order.r)
+```
