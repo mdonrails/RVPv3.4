@@ -47,7 +47,7 @@ POCT RVP &amp; CXR Analysis, with ED tracking data and BusinessObjects Order Dat
 	* source: df.flu.beforeafter.Rda, alere.dedup.Rda, pcr.flu.clean.Rda
 	* merged by FIN and created unified FluOverall column; computed durations→ alere.flu.pcr.Rda
 19. Final analyses
-	19.1 - Flu LOS Analysis
-	19.2 - Flu LOS ILI Subgroup Analysis
-	19.3 - Flu LOS CXR Analysis
-	19.4 - Flu Ordering Patterns Analysis
+	* 19.1 - Flu LOS Analysis
+	* 19.2 - Flu LOS ILI Subgroup Analysis
+	* 19.3 - Flu LOS CXR Analysis
+	* 19.4 - Flu Ordering Patterns Analysis
