@@ -28,21 +28,26 @@ POCT RVP &amp; CXR Analysis, with ED tracking data and BusinessObjects Order Dat
 		* Resp PCR w/o encounters w concurrent POCT flu ordered→ flu.lab.dedup.Rda
 	* created df of POCT Flu vs. Resp PCR, before & after→ df.flu.beforeafter.Rda
 		* via rbind of flu.poct.dedup.Rda & lab.pcr.before.Rda
-7. Flu Analysis
-8. . 
-9. 
-10. 
+7. Flu Analysis (OLD)
+7.1 Flu Analysis Before & After (OLD)
+8. Strep Analysis
+9. RSV Analysis
+10. Flu Order Patterns Comparison (OLD)
 11. Alere Data Import
 	* subset to only pt data (removed test encounters)
 	* removed irrelevant vars, unusable Patient IDs
 	* created $FIN col from Patient IDs = 12 characters and only digits→ alere.all.Rda
-12.  Alere & Flu Merge & Analysis (source: df.flu.Rda)
-13. .
-14. .
-15. .
-16. .
-17. .
+12. Alere & Flu Merge & Analysis (source: df.flu.Rda)
+13. Alere & Flu Before After Merge & Analysis
+14. Alere & Tracking Merge
+15. Redo 13 (Flu and LOSCXR) with New Full Set
+16. Alere & Flu Ordering Patterns.nb
+17. PCR Orders
 18.  Full Datasets Merge (BO, ED Tracking Shell, Alere, PCR)
 	* source: df.flu.beforeafter.Rda, alere.dedup.Rda, pcr.flu.clean.Rda
 	* merged by FIN and created unified FluOverall column; computed durations→ alere.flu.pcr.Rda
 19. Final analyses
+	19.1 - Flu LOS Analysis
+	19.2 - Flu LOS ILI Subgroup Analysis
+	19.3 - Flu LOS CXR Analysis
+	19.4 - Flu Ordering Patterns Analysis
